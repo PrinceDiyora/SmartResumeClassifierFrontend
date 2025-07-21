@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import MonacoEditor from '@monaco-editor/react';
+import { compileLatex } from '../api/compile';
 
 export default function ResumeBuilder() {
   const [latex, setLatex] = useState(`\\documentclass{article}
@@ -42,6 +43,7 @@ B.Sc. in Computer Science, University X \\\\
   const [compileFlash, setCompileFlash] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef();
+  const [pdfUrl, setPdfUrl] = useState(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -57,9 +59,20 @@ B.Sc. in Computer Science, University X \\\\
   }, []);
 
 
-  const handleCompile = () => {
+  const handleCompile = async () => {
+    setLoading(true);
     setCompileFlash(true);
     setTimeout(() => setCompileFlash(false), 400);
+    setPdfUrl(null);
+    try {
+      const blob = await compileLatex(latex);
+      const url = URL.createObjectURL(blob);
+      setPdfUrl(url);
+    } catch (err) {
+      alert('Failed to compile PDF.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLatexChange = (value) => {
@@ -80,7 +93,17 @@ B.Sc. in Computer Science, University X \\\\
   };
 
   const handleDownloadPdf = () => {
-    alert('PDF download is temporarily disabled.');
+    if (!pdfUrl) {
+      alert('No compiled PDF available.');
+      setIsDropdownOpen(false);
+      return;
+    }
+    const a = document.createElement('a');
+    a.href = pdfUrl;
+    a.download = 'resume.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     setIsDropdownOpen(false);
   };
 
@@ -125,7 +148,7 @@ B.Sc. in Computer Science, University X \\\\
                 <a
                   href="#"
                   onClick={(e) => { e.preventDefault(); handleDownloadPdf(); }}
-                  className="block px-4 py-2 text-sm text-gray-400 cursor-not-allowed hover:bg-gray-100"
+                  className={`block px-4 py-2 text-sm ${pdfUrl ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-400 cursor-not-allowed hover:bg-gray-100'}`}
                 >
                   .pdf
                 </a>
@@ -168,12 +191,23 @@ B.Sc. in Computer Science, University X \\\\
             <h2 className="text-lg font-semibold text-gray-800">Preview</h2>
           </div>
           <div className="flex-1 bg-gray-200 rounded-lg flex items-center justify-center border-2 border-dashed min-h-[40vh] lg:min-h-0">
-            <div className="text-center text-gray-500">
-              <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <p className="mt-2">PDF compilation is not available.</p>
-            </div>
+            {loading ? (
+              <div className="text-center text-gray-500">Compiling PDF...</div>
+            ) : pdfUrl ? (
+              <iframe
+                src={pdfUrl}
+                title="PDF Preview"
+                className="w-full h-[60vh] rounded-lg border"
+                style={{ minHeight: '400px' }}
+              />
+            ) : (
+              <div className="text-center text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p className="mt-2">PDF compilation is not available.</p>
+              </div>
+            )}
           </div>
         </aside>
       </div>
