@@ -1,158 +1,182 @@
 import React, { useState, useRef, useEffect } from 'react';
 import MonacoEditor from '@monaco-editor/react';
 
-const TEMPLATES = [
-  { name: 'Classic', value: 'classic', latex: `\\documentclass{article}\n\\begin{document}\n\\section*{John Doe}\n\\textbf{Email:} john.doe@email.com \\ \n\\textbf{Phone:} (123) 456-7890 \\ \n\\textbf{LinkedIn:} linkedin.com/in/johndoe\n\n\\section*{Education}\nB.Sc. in Computer Science, University X (2018-2022)\n\n\\section*{Experience}\nSoftware Engineer, Company Y (2022-Present)\n- Developed awesome things.\n\n\\end{document}` },
-  { name: 'Modern', value: 'modern', latex: `\\documentclass{moderncv}\n\\moderncvstyle{banking}\n\\moderncvcolor{blue}\n\\name{John}{Doe}\n\\email{john.doe@email.com}\n\\phone[mobile]{123-456-7890}\n\\social[linkedin]{johndoe}\n\\begin{document}\n\\makecvtitle\n\\section{Education}\nB.Sc. in Computer Science, University X (2018-2022)\n\\section{Experience}\nSoftware Engineer, Company Y (2022-Present)\n\\end{document}` },
-  { name: 'Academic', value: 'academic', latex: `\\documentclass[11pt]{article}\n\\usepackage{geometry}\n\\geometry{margin=1in}\n\\begin{document}\n\\begin{center}\n{\\LARGE John Doe}\\\\\nEmail: john.doe@email.com \\ Phone: (123) 456-7890 \\ LinkedIn: linkedin.com/in/johndoe\n\\end{center}\n\\section*{Education}\nB.Sc. in Computer Science, University X (2018-2022)\n\\section*{Experience}\nSoftware Engineer, Company Y (2022-Present)\n\\end{document}` },
-];
-
 export default function ResumeBuilder() {
-  const [selectedTemplate, setSelectedTemplate] = useState(TEMPLATES[0].value);
-  const [latex, setLatex] = useState(TEMPLATES[0].latex);
-  const [pdfUrl, setPdfUrl] = useState('');
+  const [latex, setLatex] = useState(`\\documentclass{article}
+\\usepackage[margin=1in]{geometry}
+\\begin{document}
+
+\\section*{John Doe}
+\\textbf{Email:} john.doe@email.com \\\\
+\\textbf{Phone:} (123) 456-7890 \\\\
+\\textbf{LinkedIn:} linkedin.com/in/johndoe
+
+\\section*{Education}
+B.Sc. in Computer Science, University X \\\\
+*GPA: 3.8/4.0* \\\\
+*Relevant Coursework: Data Structures, Algorithms, Web Development*
+
+\\section*{Experience}
+\\subsection*{Software Engineer Intern | ABC Corp | Summer 2023}
+\\begin{itemize}
+    \\item Developed and maintained web applications using React and Node.js.
+    \\item Collaborated with a team of developers to create new features.
+    \\item Wrote unit tests to ensure code quality.
+\\end{itemize}
+
+\\subsection*{Web Developer | XYZ Inc | 2022-2023}
+\\begin{itemize}
+    \\item Designed and developed responsive websites for clients.
+    \\item Optimized websites for speed and performance.
+\\end{itemize}
+
+\\section*{Skills}
+\\begin{itemize}
+    \\item \\textbf{Programming Languages:} JavaScript, Python, Java, C++
+    \\item \\textbf{Frameworks:} React, Node.js, Express
+    \\item \\textbf{Tools:} Git, Docker, Webpack
+\\end{itemize}
+
+\\end{document}`);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [compileFlash, setCompileFlash] = useState(false);
-  const fileInputRef = useRef();
-  const previewRef = useRef();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef();
 
-  // Update LaTeX when template changes
+  // Close dropdown when clicking outside
   useEffect(() => {
-    const tpl = TEMPLATES.find(t => t.value === selectedTemplate);
-    if (tpl) setLatex(tpl.latex);
-  }, [selectedTemplate]);
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
-  // Compile button: flash the preview pane
+
   const handleCompile = () => {
     setCompileFlash(true);
     setTimeout(() => setCompileFlash(false), 400);
   };
 
-  const handleTemplateSelect = (value) => setSelectedTemplate(value);
-
   const handleLatexChange = (value) => {
     setLatex(value ?? '');
   };
 
-  const handleImport = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (evt) => setLatex(evt.target.result);
-    reader.readAsText(file);
+  const handleDownloadTex = () => {
+    const blob = new Blob([latex], { type: 'text/x-tex' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'resume.tex';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setIsDropdownOpen(false);
   };
 
-  // Download PDF is disabled for now
-  const handleDownload = () => {
+  const handleDownloadPdf = () => {
     alert('PDF download is temporarily disabled.');
+    setIsDropdownOpen(false);
   };
 
   return (
-    <div className="flex flex-col min-h-screen font-sans bg-gray-50">
-      {/* Header */}
-      <header className="flex sticky top-0 z-10 justify-between items-center px-8 py-4 bg-white border-b shadow-sm">
-        <div className="flex gap-2 items-center">
-          <span className="text-2xl font-bold text-blue-600">LaTeX Resume Builder</span>
+    <div className="flex flex-col h-screen font-sans bg-white">
+      <header className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b shadow-sm z-20">
+        <div className="flex items-center gap-4">
+          <span className="text-xl font-bold text-gray-800">LaTeX Resume Builder</span>
         </div>
-        <div className="flex gap-2 items-center">
+        <div className="flex items-center gap-4">
           <button
             onClick={handleCompile}
-            className="flex gap-2 items-center px-5 py-2 font-medium text-white bg-green-600 rounded-lg shadow transition hover:bg-green-700"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition"
             disabled={loading}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487a2.25 2.25 0 00-3.182 0l-7.193 7.193a2.25 2.25 0 000 3.182l3.182 3.182a2.25 2.25 0 003.182 0l7.193-7.193a2.25 2.25 0 000-3.182l-3.182-3.182z" />
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            Compile
+            Recompile
           </button>
+          
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+            >
+              Download
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-30">
+                <a
+                  href="#"
+                  onClick={(e) => { e.preventDefault(); handleDownloadTex(); }}
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  .tex
+                </a>
+                <a
+                  href="#"
+                  onClick={(e) => { e.preventDefault(); handleDownloadPdf(); }}
+                  className="block px-4 py-2 text-sm text-gray-400 cursor-not-allowed hover:bg-gray-100"
+                >
+                  .pdf
+                </a>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="flex overflow-hidden flex-1">
-        {/* Sidebar */}
-        <aside className="flex overflow-y-auto flex-col gap-2 px-4 py-6 w-56 bg-white border-r shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-gray-700">Templates</h2>
-          {TEMPLATES.map((tpl) => (
-            <button
-              key={tpl.value}
-              onClick={() => handleTemplateSelect(tpl.value)}
-              className={`w-full text-left px-4 py-2 rounded-lg mb-1 font-medium transition border
-                ${selectedTemplate === tpl.value
-                  ? 'bg-blue-100 border-blue-500 text-blue-700 shadow'
-                  : 'bg-gray-50 border-transparent text-gray-700 hover:bg-blue-50 hover:text-blue-600'}`}
-            >
-              {tpl.name}
-            </button>
-          ))}
-        </aside>
-
-        {/* Editor + Preview */}
-        <main className="flex overflow-hidden flex-1">
-          {/* LaTeX Editor */}
-          <section className="flex flex-col flex-1 gap-2 p-6 min-w-0">
-            <label className="mb-2 font-semibold text-gray-700">LaTeX Editor</label>
-            <div className="relative flex-1">
-              <MonacoEditor
-                height="70vh"
-                defaultLanguage="latex"
-                value={latex}
-                onChange={handleLatexChange}
-                theme="vs-dark"
-                options={{
-                  fontSize: 14,
-                  fontFamily: 'Fira Mono, monospace',
-                  minimap: { enabled: false },
-                  wordWrap: 'on',
-                  scrollBeyondLastLine: false,
-                  smoothScrolling: true,
-                  lineNumbers: 'on',
-                  roundedSelection: false,
-                  cursorBlinking: 'blink',
-                  renderLineHighlight: 'all',
-                  automaticLayout: true,
-                  scrollbar: { vertical: 'auto', horizontal: 'auto' },
-                }}
-              />
-            </div>
-          </section>
-
-          {/* PDF Preview */}
-          <section className={`w-[420px] min-w-[280px] max-w-[600px] bg-white border-l shadow-lg flex flex-col p-4 overflow-auto resize-x transition ${compileFlash ? 'ring-4 ring-green-300' : ''}`} ref={previewRef}>
-            <div className="mb-2 font-semibold text-gray-700">PDF Preview</div>
-            <div className="flex flex-1 justify-center items-center bg-gray-100 rounded-lg border border-dashed">
-              <span className="text-gray-400">PDF compilation is not available in frontend-only mode.</span>
-            </div>
-          </section>
+      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+        {/* Editor Panel */}
+        <main className="w-full lg:w-7/12 flex flex-col overflow-y-auto lg:overflow-hidden">
+          <div className="flex-1 p-2 lg:p-4 bg-white h-[50vh] lg:h-full">
+            <MonacoEditor
+              height="100%"
+              defaultLanguage="latex"
+              value={latex}
+              onChange={handleLatexChange}
+              theme="light"
+              options={{
+                fontSize: 14,
+                fontFamily: 'Fira Mono, monospace',
+                minimap: { enabled: true },
+                wordWrap: 'on',
+                scrollBeyondLastLine: false,
+                smoothScrolling: true,
+                lineNumbers: 'on',
+                roundedSelection: false,
+                cursorBlinking: 'blink',
+                renderLineHighlight: 'all',
+                automaticLayout: true,
+              }}
+            />
+          </div>
         </main>
-      </div>
 
-      {/* Floating Import and PDF Disabled Buttons */}
-      <div className="flex fixed right-6 bottom-6 z-50 flex-row gap-3">
-        <button
-          onClick={() => fileInputRef.current.click()}
-          className="px-6 py-3 font-medium text-white bg-gray-700 rounded-full shadow-lg transition hover:bg-gray-900"
-          style={{ boxShadow: '0 4px 24px 0 rgba(0,0,0,0.12)' }}
-        >
-          Import .tex
-        </button>
-        <button
-          onClick={handleDownload}
-          className="px-5 py-3 font-semibold text-white bg-blue-500 rounded-full border border-blue-600 shadow-lg cursor-not-allowed"
-          disabled
-          style={{ minWidth: 110 }}
-        >
-          PDF Disabled
-        </button>
+        {/* Preview Panel */}
+        <aside className={`w-full lg:w-5/12 bg-gray-50 border-t-2 lg:border-t-0 lg:border-l-2 p-4 flex flex-col shadow-inner transition-all duration-300 ${compileFlash ? 'ring-4 ring-green-300' : ''}`}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-800">Preview</h2>
+          </div>
+          <div className="flex-1 bg-gray-200 rounded-lg flex items-center justify-center border-2 border-dashed min-h-[40vh] lg:min-h-0">
+            <div className="text-center text-gray-500">
+              <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p className="mt-2">PDF compilation is not available.</p>
+            </div>
+          </div>
+        </aside>
       </div>
-      <input
-        type="file"
-        accept=".tex"
-        ref={fileInputRef}
-        onChange={handleImport}
-        className="hidden"
-      />
     </div>
   );
-} 
+}
