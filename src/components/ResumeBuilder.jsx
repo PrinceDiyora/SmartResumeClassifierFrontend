@@ -190,15 +190,15 @@ B.Sc. in Computer Science, University X \\\\
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-800">Preview</h2>
           </div>
-          <div className="flex-1 bg-gray-200 rounded-lg flex items-center justify-center border-2 border-dashed min-h-[40vh] lg:min-h-0">
+          <div className="flex-1 bg-gray-200 rounded-lg flex items-center justify-center border-2 border-dashed min-h-[40vh] lg:min-h-0 p-0">
             {loading ? (
               <div className="text-center text-gray-500">Compiling PDF...</div>
             ) : pdfUrl ? (
               <iframe
                 src={pdfUrl}
                 title="PDF Preview"
-                className="w-full h-[60vh] rounded-lg border"
-                style={{ minHeight: '400px' }}
+                className="w-full h-full rounded-lg border"
+                style={{ minHeight: 0, minWidth: 0, height: '100%', width: '100%', border: 0 }}
               />
             ) : (
               <div className="text-center text-gray-500">
