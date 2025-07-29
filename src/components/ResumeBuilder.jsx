@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import MonacoEditor from '@monaco-editor/react';
 import { compileLatex } from '../api/compile';
+import { Menu, FileText, Settings, Sun, Moon, Eye, EyeOff, Maximize2, Download, Save, FileDown } from 'lucide-react';
+import { useCallback } from 'react';
 
 export default function ResumeBuilder() {
   const [latex, setLatex] = useState(`\\documentclass{article}
@@ -109,17 +111,17 @@ B.Sc. in Computer Science, University X \\\\
 
   return (
     <div className="flex flex-col h-screen font-sans bg-white">
-      <header className="flex items-center justify-between px-4 py-2 bg-gray-50 border-b shadow-sm z-20">
-        <div className="flex items-center gap-4">
+      <header className="flex z-20 justify-between items-center px-4 py-2 bg-gray-50 border-b shadow-sm">
+        <div className="flex gap-4 items-center">
           <span className="text-xl font-bold text-gray-800">LaTeX Resume Builder</span>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex gap-4 items-center">
           <button
             onClick={handleCompile}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition"
+            className="flex gap-2 items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg transition hover:bg-green-700"
             disabled={loading}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -129,15 +131,15 @@ B.Sc. in Computer Science, University X \\\\
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition"
+              className="flex gap-2 items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg transition hover:bg-blue-700"
             >
               Download
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
             {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-30">
+              <div className="absolute right-0 z-30 py-1 mt-2 w-48 bg-white rounded-md shadow-lg">
                 <a
                   href="#"
                   onClick={(e) => { e.preventDefault(); handleDownloadTex(); }}
@@ -158,9 +160,9 @@ B.Sc. in Computer Science, University X \\\\
         </div>
       </header>
 
-      <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+      <div className="flex overflow-hidden flex-col flex-1 lg:flex-row">
         {/* Editor Panel */}
-        <main className="w-full lg:w-7/12 flex flex-col overflow-y-auto lg:overflow-hidden">
+        <main className="flex overflow-y-auto flex-col w-full lg:w-7/12 lg:overflow-hidden">
           <div className="flex-1 p-2 lg:p-4 bg-white h-[50vh] lg:h-full">
             <MonacoEditor
               height="100%"
@@ -187,7 +189,7 @@ B.Sc. in Computer Science, University X \\\\
 
         {/* Preview Panel */}
         <aside className={`w-full lg:w-5/12 bg-gray-50 border-t-2 lg:border-t-0 lg:border-l-2 p-4 flex flex-col shadow-inner transition-all duration-300 ${compileFlash ? 'ring-4 ring-green-300' : ''}`}>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex justify-between items-center mb-4">
             <h2 className="text-lg font-semibold text-gray-800">Preview</h2>
           </div>
           <div className="flex-1 bg-gray-200 rounded-lg flex items-center justify-center border-2 border-dashed min-h-[40vh] lg:min-h-0 p-0">
@@ -202,7 +204,7 @@ B.Sc. in Computer Science, University X \\\\
               />
             ) : (
               <div className="text-center text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 <p className="mt-2">PDF compilation is not available.</p>
