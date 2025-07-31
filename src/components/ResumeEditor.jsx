@@ -1,61 +1,29 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import MonacoEditor from '@monaco-editor/react';
 import { compileLatex } from '../api/compile';
 import { getResumeById, updateResume } from '../api/resume';
-import { Menu, FileText, Settings, Sun, Moon, Eye, EyeOff, Maximize2, Download, Save, FileDown, ChevronDown, Loader2, Code, FileOutput } from 'lucide-react';
-import { useCallback } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { Menu, FileText, Settings, Sun, Moon, Eye, EyeOff, Download, Save, FileDown, ChevronDown, Loader2, Code, FileOutput, ArrowLeft } from 'lucide-react';
 
-export default function ResumeBuilder() {
+const ResumeEditor = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { token } = useAuth();
+  const navigate = useNavigate();
+  const dropdownRef = useRef(null);
+  
+  const [resume, setResume] = useState(null);
+  const [title, setTitle] = useState('');
+  const [latex, setLatex] = useState('');
   const [theme, setTheme] = useState('light');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [resumeTitle, setResumeTitle] = useState('My Resume');
-  const [latex, setLatex] = useState(`\documentclass{article}
-\\usepackage[margin=1in]{geometry}
-\begin{document}
-
-\section*{John Doe}
-\textbf{Email:} john.doe@email.com \\
-\textbf{Phone:} (123) 456-7890 \\
-\textbf{LinkedIn:} linkedin.com/in/johndoe
-
-\section*{Education}
-B.Sc. in Computer Science, University X \\
-*GPA: 3.8/4.0* \\
-*Relevant Coursework: Data Structures, Algorithms, Web Development*
-
-\section*{Experience}
-\subsection*{Software Engineer Intern | ABC Corp | Summer 2023}
-\begin{itemize}
-    \item Developed and maintained web applications using React and Node.js.
-    \item Collaborated with a team of developers to create new features.
-    \item Wrote unit tests to ensure code quality.
-\end{itemize}
-
-\subsection*{Web Developer | XYZ Inc | 2022-2023}
-\begin{itemize}
-    \item Designed and developed responsive websites for clients.
-    \item Optimized websites for speed and performance.
-\end{itemize}
-
-\section*{Skills}
-\begin{itemize}
-    \item \textbf{Programming Languages:} JavaScript, Python, Java, C++
-    \item \textbf{Frameworks:} React, Node.js, Express
-    \item \textbf{Tools:} Git, Docker, Webpack
-\end{itemize}
-
-\end{document}`);
-  const [loading, setLoading] = useState(false);
-  const [compileFlash, setCompileFlash] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const dropdownRef = useRef();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [compiling, setCompiling] = useState(false);
   const [pdfUrl, setPdfUrl] = useState(null);
-  const [fetchingResume, setFetchingResume] = useState(false);
+  const [error, setError] = useState(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [compileFlash, setCompileFlash] = useState(false);
   const [saveTimeout, setSaveTimeout] = useState(null);
 
   // Close dropdown when clicking outside
@@ -65,93 +33,105 @@ B.Sc. in Computer Science, University X \\
         setIsDropdownOpen(false);
       }
     };
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
-  // Fetch resume data if ID is provided
+  // Fetch resume data
   useEffect(() => {
+    const fetchResume = async () => {
+      try {
+        setLoading(true);
+        const data = await getResumeById(id, token);
+        setResume(data);
+        setTitle(data.title);
+        setLatex(data.content);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching resume:', err);
+        setError('Failed to load resume. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (id && token) {
-      setFetchingResume(true);
-      getResumeById(id, token)
-        .then(data => {
-          setLatex(data.content);
-          setResumeTitle(data.title);
-          // Compile the loaded resume
-          handleCompile();
-        })
-        .catch(err => {
-          console.error('Failed to fetch resume:', err);
-          alert('Failed to load resume. Redirecting to resume builder.');
-          navigate('/resume-builder');
-        })
-        .finally(() => {
-          setFetchingResume(false);
-        });
+      fetchResume();
     }
-  }, [id, token, navigate]);
+  }, [id, token]);
 
-
-  const handleCompile = async () => {
-    setLoading(true);
-    setCompileFlash(true);
-    setTimeout(() => setCompileFlash(false), 400);
-    setPdfUrl(null);
-    try {
-      const blob = await compileLatex(latex);
-      const url = URL.createObjectURL(blob);
-      setPdfUrl(url);
-    } catch (err) {
-      alert('Failed to compile PDF.');
-    } finally {
-      setLoading(false);
+  // Auto-save functionality
+  useEffect(() => {
+    if (resume && (title !== resume.title || latex !== resume.content)) {
+      if (saveTimeout) {
+        clearTimeout(saveTimeout);
+      }
+      
+      const timeout = setTimeout(() => {
+        handleSave();
+      }, 2000); // Auto-save after 2 seconds of inactivity
+      
+      setSaveTimeout(timeout);
     }
-  };
+    
+    return () => {
+      if (saveTimeout) {
+        clearTimeout(saveTimeout);
+      }
+    };
+  }, [title, latex]);
 
   const handleLatexChange = (value) => {
     setLatex(value ?? '');
+  };
+
+  const handleTitleChange = (e) => {
+    setTitle(e.target.value);
+  };
+
+  const handleSave = async () => {
+    if (!resume) return;
     
-    // Auto-save changes if we have an ID
-    if (id && token) {
-      // Clear any existing timeout
-      if (saveTimeout) {
-        clearTimeout(saveTimeout);
-      }
-      
-      // Set a new timeout to save after 1 second of inactivity
-      const timeoutId = setTimeout(() => {
-        updateResume(id, { content: value ?? '', title: resumeTitle }, token)
-          .catch(err => {
-            console.error('Failed to auto-save resume:', err);
-          });
-      }, 1000);
-      
-      setSaveTimeout(timeoutId);
+    try {
+      setSaving(true);
+      await updateResume(id, { title, content: latex }, token);
+      // Update the local resume state
+      setResume({ ...resume, title, content: latex });
+    } catch (err) {
+      console.error('Error saving resume:', err);
+      setError('Failed to save resume. Please try again.');
+    } finally {
+      setSaving(false);
     }
   };
-  
-  const handleTitleChange = (e) => {
-    const newTitle = e.target.value;
-    setResumeTitle(newTitle);
-    
-    // Auto-save title changes if we have an ID
-    if (id && token) {
-      // Clear any existing timeout
-      if (saveTimeout) {
-        clearTimeout(saveTimeout);
-      }
+
+  const handleCompile = async () => {
+    try {
+      setCompiling(true);
+      setError(null);
       
-      // Set a new timeout to save after 1 second of inactivity
-      const timeoutId = setTimeout(() => {
-        updateResume(id, { content: latex, title: newTitle }, token)
-          .catch(err => {
-            console.error('Failed to auto-save resume title:', err);
-          });
-      }, 1000);
+      // First save any changes
+      await handleSave();
       
-      setSaveTimeout(timeoutId);
+      // Then compile
+      const response = await compileLatex(latex);
+      
+      // Create a blob URL for the PDF
+      const blob = new Blob([response], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      setPdfUrl(url);
+      
+      // Flash effect on the preview panel
+      setCompileFlash(true);
+      setTimeout(() => setCompileFlash(false), 1000);
+    } catch (err) {
+      console.error('Compilation error:', err);
+      setError('Failed to compile LaTeX. Please check your code for errors.');
+    } finally {
+      setCompiling(false);
     }
   };
 
@@ -160,7 +140,7 @@ B.Sc. in Computer Science, University X \\
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'resume.tex';
+    a.download = `${title || 'resume'}.tex`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -169,19 +149,45 @@ B.Sc. in Computer Science, University X \\
   };
 
   const handleDownloadPdf = () => {
-    if (!pdfUrl) {
-      alert('No compiled PDF available.');
-      setIsDropdownOpen(false);
-      return;
-    }
+    if (!pdfUrl) return;
+    
     const a = document.createElement('a');
     a.href = pdfUrl;
-    a.download = 'resume.pdf';
+    a.download = `${title || 'resume'}.pdf`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     setIsDropdownOpen(false);
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-gray-50">
+        <Loader2 size={32} className="animate-spin text-indigo-600" />
+        <span className="ml-2 text-gray-600">Loading resume...</span>
+      </div>
+    );
+  }
+
+  if (error && !resume) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-gray-50 p-4">
+        <div className="bg-red-50 text-red-700 p-4 rounded-lg max-w-md w-full">
+          <h2 className="text-lg font-semibold mb-2">Error</h2>
+          <p>{error}</p>
+          <div className="mt-4">
+            <Link 
+              to="/resume-builder"
+              className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800"
+            >
+              <ArrowLeft size={16} />
+              Back to Resume Builder
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen font-sans bg-gray-50">
@@ -200,17 +206,16 @@ B.Sc. in Computer Science, University X \\
             </div>
             <span className="text-xl font-bold text-gray-800">ResumeCraft AI</span>
           </Link>
-          {id && (
-            <div className="ml-6">
-              <input 
-                type="text" 
-                value={resumeTitle} 
-                onChange={handleTitleChange}
-                className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="Resume Title"
-              />
-            </div>
-          )}
+          
+          <div className="ml-4 flex-1 max-w-md">
+            <input
+              type="text"
+              value={title}
+              onChange={handleTitleChange}
+              placeholder="Resume Title"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
         </div>
         
         <div className="flex gap-3 items-center">
@@ -223,12 +228,21 @@ B.Sc. in Computer Science, University X \\
           </button>
           
           <button
+            onClick={handleSave}
+            className="flex gap-2 items-center px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg transition hover:bg-indigo-100"
+            disabled={saving}
+          >
+            {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+            {saving ? 'Saving...' : 'Save'}
+          </button>
+          
+          <button
             onClick={handleCompile}
             className="flex gap-2 items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg transition hover:bg-indigo-700 shadow-sm"
-            disabled={loading}
+            disabled={compiling}
           >
-            {loading ? <Loader2 size={18} className="animate-spin" /> : <FileOutput size={18} />}
-            {loading ? 'Compiling...' : 'Compile PDF'}
+            {compiling ? <Loader2 size={18} className="animate-spin" /> : <FileOutput size={18} />}
+            {compiling ? 'Compiling...' : 'Compile PDF'}
           </button>
           
           <div className="relative" ref={dropdownRef}>
@@ -260,6 +274,14 @@ B.Sc. in Computer Science, University X \\
               </div>
             )}
           </div>
+          
+          <Link 
+            to="/resume-builder"
+            className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Back to Resume Builder"
+          >
+            <ArrowLeft size={20} />
+          </Link>
         </div>
       </header>
       
@@ -276,9 +298,13 @@ B.Sc. in Computer Science, University X \\
           </div>
           
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+            <Link to="/" className="flex items-center gap-2 p-3 text-gray-700 rounded-lg hover:bg-indigo-50 transition-colors">
+              <div className="text-indigo-600"><FileText size={18} /></div>
+              <span>Home</span>
+            </Link>
             <Link to="/resume-builder" className="flex items-center gap-2 p-3 text-gray-700 rounded-lg hover:bg-indigo-50 transition-colors">
               <div className="text-indigo-600"><FileText size={18} /></div>
-              <span>My Resumes</span>
+              <span>Resume Builder</span>
             </Link>
             <Link to="/" className="flex items-center gap-2 p-3 text-gray-700 rounded-lg hover:bg-indigo-50 transition-colors">
               <div className="text-indigo-600"><Settings size={18} /></div>
@@ -287,8 +313,8 @@ B.Sc. in Computer Science, University X \\
           </nav>
           
           <div className="p-4 border-t">
-            <Link to="/resume-builder" className="flex items-center justify-center gap-2 w-full p-2 text-sm font-medium text-white bg-indigo-600 rounded-lg transition hover:bg-indigo-700">
-              <span>Back to My Resumes</span>
+            <Link to="/" className="flex items-center justify-center gap-2 w-full p-2 text-sm font-medium text-white bg-indigo-600 rounded-lg transition hover:bg-indigo-700">
+              <span>Back to Home</span>
             </Link>
           </div>
         </div>
@@ -313,6 +339,11 @@ B.Sc. in Computer Science, University X \\
               </h2>
               <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-md">Auto-saving</div>
             </div>
+            {error && (
+              <div className="mb-3 bg-red-50 text-red-700 p-3 rounded-md text-sm">
+                {error}
+              </div>
+            )}
             <div className="h-[calc(100%-2.5rem)] rounded-lg overflow-hidden border border-gray-200 shadow-sm">
               <MonacoEditor
                 height="100%"
@@ -349,12 +380,12 @@ B.Sc. in Computer Science, University X \\
               onClick={handleCompile}
               className="flex gap-1 items-center px-3 py-1 text-xs font-medium text-indigo-700 bg-indigo-50 rounded-md transition hover:bg-indigo-100"
             >
-              {loading ? <Loader2 size={12} className="animate-spin" /> : <FileOutput size={12} />}
-              {loading ? 'Compiling...' : 'Refresh'}
+              {compiling ? <Loader2 size={12} className="animate-spin" /> : <FileOutput size={12} />}
+              {compiling ? 'Compiling...' : 'Refresh'}
             </button>
           </div>
           <div className="flex-1 bg-white rounded-lg flex items-center justify-center border border-gray-200 shadow-sm min-h-[40vh] lg:min-h-0 p-0 overflow-hidden">
-            {loading ? (
+            {compiling ? (
               <div className="text-center text-gray-500 flex flex-col items-center">
                 <Loader2 size={32} className="animate-spin text-indigo-500 mb-2" />
                 <p>Compiling your PDF...</p>
@@ -385,4 +416,6 @@ B.Sc. in Computer Science, University X \\
       </div>
     </div>
   );
-}
+};
+
+export default ResumeEditor;

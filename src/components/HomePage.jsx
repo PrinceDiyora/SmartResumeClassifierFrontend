@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { Check, Play } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import ProfileDropdown from './ProfileDropdown';
+import TypewriterText from './TypewriterText';
 import './HomePage.css';
 
 export default function HomePage() {
   const [isVisible, setIsVisible] = useState(false);
   const [currentFeature, setCurrentFeature] = useState(0);
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     setIsVisible(true);
@@ -50,8 +56,14 @@ export default function HomePage() {
           </nav>
 
           <div className="auth-buttons">
-            <button className="btn btn-ghost">Log In</button>
-            <button className="btn btn-primary">Sign Up</button>
+            {isAuthenticated ? (
+              <ProfileDropdown />
+            ) : (
+              <>
+                <Link to="/login" className="btn btn-ghost">Log In</Link>
+                <Link to="/signup" className="btn btn-primary">Sign Up</Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -61,24 +73,42 @@ export default function HomePage() {
         <div className="container">
           <div className="hero-content">
             <div className="hero-text">
+              <div className="hero-badge">
+                <span className="pulse"></span>
+                <span>AI-Powered Resume Platform</span>
+              </div>
               <h1 className="hero-title">
-                <span className="gradient-text">Transform</span> Your Career
-                <br />
-                With AI-Powered
-                <br />
-                Resume Tools
+                <TypewriterText 
+                  text="Transform Your Career With Smart Resume Tools" 
+                  speed={80} 
+                  className="gradient-text"
+                />
               </h1>
               <p className="hero-subtitle">
                 Build, classify, and perfect your resume with cutting-edge AI technology. 
-                Stand out from the crowd and land your dream job.
+                Stand out from the crowd and land your dream job with our intelligent resume platform.
               </p>
+              <div className="hero-features">
+                {features.map((feature, index) => (
+                  <div 
+                    key={index} 
+                    className={`hero-feature ${currentFeature === index ? 'active' : ''}`}
+                  >
+                    <Check size={16} className="feature-check" />
+                    <span>{feature}</span>
+                  </div>
+                ))}
+              </div>
               <div className="hero-buttons">
-                <Link to="/builder" className="btn btn-primary btn-large">
-                  <i className="fas fa-play"></i>
+                <button 
+                  onClick={() => isAuthenticated ? navigate('/resume-builder') : navigate('/login')} 
+                  className="btn btn-primary btn-large"
+                >
+                  <Play size={18} />
                   Start Building
-                </Link>
+                </button>
                 <button className="btn btn-outline btn-large">
-                  <i className="fas fa-play"></i>
+                  <Play size={18} />
                   Watch Demo
                 </button>
               </div>
@@ -94,20 +124,40 @@ export default function HomePage() {
                 </div>
                 <div className="card-content">
                   <div className="resume-preview">
-                    <div className="preview-line"></div>
-                    <div className="preview-line short"></div>
-                    <div className="preview-line"></div>
-                    <div className="preview-line short"></div>
-                    <div className="preview-line"></div>
+                    <div className="preview-header"></div>
+                    <div className="preview-section">
+                      <div className="preview-line"></div>
+                      <div className="preview-line short"></div>
+                    </div>
+                    <div className="preview-section">
+                      <div className="preview-line"></div>
+                      <div className="preview-line"></div>
+                      <div className="preview-line short"></div>
+                    </div>
+                    <div className="preview-section">
+                      <div className="preview-line"></div>
+                      <div className="preview-line short"></div>
+                      <div className="preview-line short"></div>
+                    </div>
                   </div>
                 </div>
               </div>
               <div className="floating-badge">
-                <i className="fas fa-check-circle"></i>
+                <Check size={16} />
                 <span>AI Verified</span>
+              </div>
+              <div className="floating-elements">
+                <div className="floating-element e1">LaTeX</div>
+                <div className="floating-element e2">AI</div>
+                <div className="floating-element e3">PDF</div>
               </div>
             </div>
           </div>
+        </div>
+        <div className="hero-wave">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+            <path fill="#ffffff" fillOpacity="1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,149.3C960,160,1056,160,1152,138.7C1248,117,1344,75,1392,53.3L1440,32L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+          </svg>
         </div>
       </section>
 
@@ -131,10 +181,13 @@ export default function HomePage() {
               </div>
               <h3>Smart Resume Builder</h3>
               <p>Create professional resumes with our AI-powered builder and beautiful LaTeX templates.</p>
-              <Link to="/builder" className="feature-link">
+              <button 
+                onClick={() => isAuthenticated ? navigate('/resume-builder') : navigate('/login')} 
+                className="feature-link"
+              >
                 Start Building
                 <i className="fas fa-arrow-right"></i>
-              </Link>
+              </button>
             </div>
 
             <div className="feature-card">
@@ -235,9 +288,12 @@ export default function HomePage() {
           <div className="cta-content">
             <h2>Ready to Transform Your Career?</h2>
             <p>Join thousands of professionals who have already landed their dream jobs</p>
-            <Link to="/builder" className="btn btn-primary btn-large">
+            <button 
+              onClick={() => isAuthenticated ? navigate('/resume-builder') : navigate('/login')} 
+              className="btn btn-primary btn-large"
+            >
               Get Started Free
-            </Link>
+            </button>
           </div>
         </div>
       </section>
