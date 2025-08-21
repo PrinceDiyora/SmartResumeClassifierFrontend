@@ -31,10 +31,10 @@ const ResumeList = () => {
         setLoading(false);
       }
     };
-
     fetchResumes();
-  }, [token]);
 
+  }, [token]);
+  
   // Handle edit resume
   const handleEdit = (id) => {
     navigate(`/editor/${id}`);

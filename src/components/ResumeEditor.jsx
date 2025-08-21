@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import MonacoEditor from '@monaco-editor/react';
-import { compileLatex } from '../api/compile';
-import { getResumeById, updateResume } from '../api/resume';
+import { compileAndSave } from '../api/compile';
+import { getResumeById } from '../api/resume';
 import { useAuth } from '../context/AuthContext';
 import { Menu, FileText, Settings, Sun, Moon, Eye, EyeOff, Download, Save, FileDown, ChevronDown, Loader2, Code, FileOutput, ArrowLeft } from 'lucide-react';
 
@@ -25,6 +25,21 @@ const ResumeEditor = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [compileFlash, setCompileFlash] = useState(false);
   const [saveTimeout, setSaveTimeout] = useState(null);
+  const storageKey = id ? `resume-${id}` : 'resume-draft';
+
+  const persistDraft = (nextTitle, nextLatex) => {
+    try {
+      const draft = { id, title: nextTitle, content: nextLatex, updatedAt: Date.now() };
+      localStorage.setItem(storageKey, JSON.stringify(draft));
+    } catch (_) {}
+  };
+
+  // Ensure draft persists on tab close/refresh
+  useEffect(() => {
+    const handleBeforeUnload = () => persistDraft(title, latex);
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [title, latex]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -40,15 +55,24 @@ const ResumeEditor = () => {
     };
   }, []);
 
-  // Fetch resume data
+  // Fetch resume data, prefer localStorage draft if present
   useEffect(() => {
     const fetchResume = async () => {
       try {
         setLoading(true);
+        const draftJson = localStorage.getItem(storageKey);
+        if (draftJson) {
+          const draft = JSON.parse(draftJson);
+          setTitle(draft.title ?? '');
+          setLatex(draft.content ?? '');
+        }
+
         const data = await getResumeById(id, token);
         setResume(data);
-        setTitle(data.title);
-        setLatex(data.content);
+        if (!draftJson) {
+          setTitle(data.title);
+          setLatex(data.content);
+        }
         setError(null);
       } catch (err) {
         console.error('Error fetching resume:', err);
@@ -63,46 +87,43 @@ const ResumeEditor = () => {
     }
   }, [id, token]);
 
-  // Auto-save functionality
+  // Local auto-save to localStorage only (no DB)
   useEffect(() => {
-    if (resume && (title !== resume.title || latex !== resume.content)) {
-      if (saveTimeout) {
-        clearTimeout(saveTimeout);
-      }
-      
-      const timeout = setTimeout(() => {
-        handleSave();
-      }, 2000); // Auto-save after 2 seconds of inactivity
-      
-      setSaveTimeout(timeout);
+    if (saveTimeout) {
+      clearTimeout(saveTimeout);
     }
-    
-    return () => {
-      if (saveTimeout) {
-        clearTimeout(saveTimeout);
-      }
-    };
+    const timeout = setTimeout(() => {
+      const draft = { id, title, content: latex, updatedAt: Date.now() };
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(draft));
+      } catch (_) {}
+    }, 800);
+    setSaveTimeout(timeout);
+
+    return () => { if (saveTimeout) { clearTimeout(saveTimeout); } };
   }, [title, latex]);
 
   const handleLatexChange = (value) => {
-    setLatex(value ?? '');
+    const next = value ?? '';
+    setLatex(next);
+    persistDraft(title, next);
   };
 
   const handleTitleChange = (e) => {
-    setTitle(e.target.value);
+    const next = e.target.value;
+    setTitle(next);
+    persistDraft(next, latex);
   };
 
   const handleSave = async () => {
-    if (!resume) return;
-    
+    // Persist draft to localStorage only
     try {
       setSaving(true);
-      await updateResume(id, { title, content: latex }, token);
-      // Update the local resume state
-      setResume({ ...resume, title, content: latex });
+      const draft = { id, title, content: latex, updatedAt: Date.now() };
+      localStorage.setItem(storageKey, JSON.stringify(draft));
     } catch (err) {
-      console.error('Error saving resume:', err);
-      setError('Failed to save resume. Please try again.');
+      console.error('Error saving draft:', err);
+      setError('Failed to save draft locally.');
     } finally {
       setSaving(false);
     }
@@ -113,11 +134,8 @@ const ResumeEditor = () => {
       setCompiling(true);
       setError(null);
       
-      // First save any changes
-      await handleSave();
-      
-      // Then compile
-      const response = await compileLatex(latex);
+      // save+compile on server (DB update only now)
+      const response = await compileAndSave({ id, title, code: latex, token });
       
       // Create a blob URL for the PDF
       const blob = new Blob([response], { type: 'application/pdf' });
@@ -233,7 +251,7 @@ const ResumeEditor = () => {
             disabled={saving}
           >
             {saving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-            {saving ? 'Saving...' : 'Save'}
+            {saving ? 'Saving...' : 'Save Draft'}
           </button>
           
           <button
@@ -407,7 +425,7 @@ const ResumeEditor = () => {
                   className="mt-4 flex gap-2 items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg transition hover:bg-indigo-700 shadow-sm"
                 >
                   <FileOutput size={16} />
-                  Compile PDF
+                  Compile PDFFFF
                 </button>
               </div>
             )}

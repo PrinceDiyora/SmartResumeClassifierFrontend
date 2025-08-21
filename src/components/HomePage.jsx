@@ -22,7 +22,7 @@ export default function HomePage() {
 
   const features = [
     "AI-Powered Resume Classification",
-    "Professional LaTeX Templates", 
+    "Professional LaTeX Templates",
     "Smart Content Suggestions"
   ];
 
@@ -78,20 +78,20 @@ export default function HomePage() {
                 <span>AI-Powered Resume Platform</span>
               </div>
               <h1 className="hero-title">
-                <TypewriterText 
-                  text="Transform Your Career With Smart Resume Tools" 
-                  speed={80} 
+                <TypewriterText
+                  text="Transform Your Career With Smart Resume Tools"
+                  speed={80}
                   className="gradient-text"
                 />
               </h1>
               <p className="hero-subtitle">
-                Build, classify, and perfect your resume with cutting-edge AI technology. 
+                Build, classify, and perfect your resume with cutting-edge AI technology.
                 Stand out from the crowd and land your dream job with our intelligent resume platform.
               </p>
               <div className="hero-features">
                 {features.map((feature, index) => (
-                  <div 
-                    key={index} 
+                  <div
+                    key={index}
                     className={`hero-feature ${currentFeature === index ? 'active' : ''}`}
                   >
                     <Check size={16} className="feature-check" />
@@ -100,8 +100,8 @@ export default function HomePage() {
                 ))}
               </div>
               <div className="hero-buttons">
-                <button 
-                  onClick={() => isAuthenticated ? navigate('/resume-builder') : navigate('/login')} 
+                <button
+                  onClick={() => isAuthenticated ? navigate('/resume-builder') : navigate('/login')}
                   className="btn btn-primary btn-large"
                 >
                   <Play size={18} />
@@ -124,21 +124,11 @@ export default function HomePage() {
                 </div>
                 <div className="card-content">
                   <div className="resume-preview">
-                    <div className="preview-header"></div>
-                    <div className="preview-section">
-                      <div className="preview-line"></div>
-                      <div className="preview-line short"></div>
-                    </div>
-                    <div className="preview-section">
-                      <div className="preview-line"></div>
-                      <div className="preview-line"></div>
-                      <div className="preview-line short"></div>
-                    </div>
-                    <div className="preview-section">
-                      <div className="preview-line"></div>
-                      <div className="preview-line short"></div>
-                      <div className="preview-line short"></div>
-                    </div>
+                    <img
+                      src="/sample-resume.png"
+                      alt="Sample Resume Preview"
+                      style={{ width: "100%", borderRadius: "8px" }}
+                    />
                   </div>
                 </div>
               </div>
@@ -181,8 +171,8 @@ export default function HomePage() {
               </div>
               <h3>Smart Resume Builder</h3>
               <p>Create professional resumes with our AI-powered builder and beautiful LaTeX templates.</p>
-              <button 
-                onClick={() => isAuthenticated ? navigate('/resume-builder') : navigate('/login')} 
+              <button
+                onClick={() => isAuthenticated ? navigate('/resume-builder') : navigate('/login')}
                 className="feature-link"
               >
                 Start Building
@@ -288,8 +278,8 @@ export default function HomePage() {
           <div className="cta-content">
             <h2>Ready to Transform Your Career?</h2>
             <p>Join thousands of professionals who have already landed their dream jobs</p>
-            <button 
-              onClick={() => isAuthenticated ? navigate('/resume-builder') : navigate('/login')} 
+            <button
+              onClick={() => isAuthenticated ? navigate('/resume-builder') : navigate('/login')}
               className="btn btn-primary btn-large"
             >
               Get Started Free

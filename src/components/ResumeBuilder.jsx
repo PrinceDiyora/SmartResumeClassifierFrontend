@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import MonacoEditor from '@monaco-editor/react';
-import { compileLatex } from '../api/compile';
+import { compileAndSave } from '../api/compile';
 import { getResumeById, updateResume } from '../api/resume';
 import { Menu, FileText, Settings, Sun, Moon, Eye, EyeOff, Maximize2, Download, Save, FileDown, ChevronDown, Loader2, Code, FileOutput } from 'lucide-react';
 import { useCallback } from 'react';
@@ -57,6 +57,14 @@ B.Sc. in Computer Science, University X \\
   const [pdfUrl, setPdfUrl] = useState(null);
   const [fetchingResume, setFetchingResume] = useState(false);
   const [saveTimeout, setSaveTimeout] = useState(null);
+  const storageKey = id ? `resume-${id}` : 'resume-draft';
+
+  const persistDraft = (nextTitle, nextLatex) => {
+    try {
+      const draft = { id, title: nextTitle, content: nextLatex, updatedAt: Date.now() };
+      localStorage.setItem(storageKey, JSON.stringify(draft));
+    } catch (_) {}
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -71,16 +79,25 @@ B.Sc. in Computer Science, University X \\
     };
   }, []);
 
-  // Fetch resume data if ID is provided
+  // Fetch resume data if ID is provided, prefer localStorage draft
   useEffect(() => {
     if (id && token) {
       setFetchingResume(true);
+      const draftJson = localStorage.getItem(storageKey);
+      if (draftJson) {
+        try {
+          const draft = JSON.parse(draftJson);
+          setLatex(draft.content ?? latex);
+          setResumeTitle(draft.title ?? resumeTitle);
+        } catch (_) {}
+      }
+
       getResumeById(id, token)
         .then(data => {
-          setLatex(data.content);
-          setResumeTitle(data.title);
-          // Compile the loaded resume
-          handleCompile();
+          if (!draftJson) {
+            setLatex(data.content);
+            setResumeTitle(data.title);
+          }
         })
         .catch(err => {
           console.error('Failed to fetch resume:', err);
@@ -100,7 +117,9 @@ B.Sc. in Computer Science, University X \\
     setTimeout(() => setCompileFlash(false), 400);
     setPdfUrl(null);
     try {
-      const blob = await compileLatex(latex);
+      // save draft locally first
+      persistDraft(resumeTitle, latex);
+      const blob = await compileAndSave({ id, title: resumeTitle, code: latex, token });
       const url = URL.createObjectURL(blob);
       setPdfUrl(url);
     } catch (err) {
@@ -111,48 +130,20 @@ B.Sc. in Computer Science, University X \\
   };
 
   const handleLatexChange = (value) => {
-    setLatex(value ?? '');
-    
-    // Auto-save changes if we have an ID
-    if (id && token) {
-      // Clear any existing timeout
-      if (saveTimeout) {
-        clearTimeout(saveTimeout);
-      }
-      
-      // Set a new timeout to save after 1 second of inactivity
-      const timeoutId = setTimeout(() => {
-        updateResume(id, { content: value ?? '', title: resumeTitle }, token)
-          .catch(err => {
-            console.error('Failed to auto-save resume:', err);
-          });
-      }, 1000);
-      
-      setSaveTimeout(timeoutId);
-    }
+    const next = value ?? '';
+    setLatex(next);
+    // debounce localStorage to avoid excessive writes
+    if (saveTimeout) clearTimeout(saveTimeout);
+    const timeoutId = setTimeout(() => persistDraft(resumeTitle, next), 500);
+    setSaveTimeout(timeoutId);
   };
   
   const handleTitleChange = (e) => {
     const newTitle = e.target.value;
     setResumeTitle(newTitle);
-    
-    // Auto-save title changes if we have an ID
-    if (id && token) {
-      // Clear any existing timeout
-      if (saveTimeout) {
-        clearTimeout(saveTimeout);
-      }
-      
-      // Set a new timeout to save after 1 second of inactivity
-      const timeoutId = setTimeout(() => {
-        updateResume(id, { content: latex, title: newTitle }, token)
-          .catch(err => {
-            console.error('Failed to auto-save resume title:', err);
-          });
-      }, 1000);
-      
-      setSaveTimeout(timeoutId);
-    }
+    if (saveTimeout) clearTimeout(saveTimeout);
+    const timeoutId = setTimeout(() => persistDraft(newTitle, latex), 500);
+    setSaveTimeout(timeoutId);
   };
 
   const handleDownloadTex = () => {
@@ -345,13 +336,13 @@ B.Sc. in Computer Science, University X \\
               <FileText size={18} className="text-indigo-600" />
               PDF Preview
             </h2>
-            <button 
+            {/* <button 
               onClick={handleCompile}
               className="flex gap-1 items-center px-3 py-1 text-xs font-medium text-indigo-700 bg-indigo-50 rounded-md transition hover:bg-indigo-100"
             >
               {loading ? <Loader2 size={12} className="animate-spin" /> : <FileOutput size={12} />}
               {loading ? 'Compiling...' : 'Refresh'}
-            </button>
+            </button> */}
           </div>
           <div className="flex-1 bg-white rounded-lg flex items-center justify-center border border-gray-200 shadow-sm min-h-[40vh] lg:min-h-0 p-0 overflow-hidden">
             {loading ? (
@@ -371,13 +362,6 @@ B.Sc. in Computer Science, University X \\
                 <FileText size={48} className="text-gray-300 mb-2" />
                 <p className="font-medium">No PDF preview available</p>
                 <p className="text-sm mt-1">Click the Compile button to generate a preview</p>
-                <button
-                  onClick={handleCompile}
-                  className="mt-4 flex gap-2 items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg transition hover:bg-indigo-700 shadow-sm"
-                >
-                  <FileOutput size={16} />
-                  Compile PDF
-                </button>
               </div>
             )}
           </div>
