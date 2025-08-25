@@ -121,7 +121,7 @@ const Login = () => {
               </div>
             </div>
             
-            {/* Remember me checkbox */}
+            {/* Remember me checkbox
             <div className="flex items-center">
               <input
                 id="remember-me"
@@ -132,7 +132,7 @@ const Login = () => {
               <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
                 Remember me
               </label>
-            </div>
+            </div> */}
             
             {/* Submit button */}
             <button
@@ -158,17 +158,17 @@ const Login = () => {
           </form>
           
           {/* Divider */}
-          <div className="relative my-6">
+          {/* <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-200"></div>
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-2 bg-white text-gray-500">Or continue with</span>
             </div>
-          </div>
+          </div> */}
           
           {/* Social login buttons */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* <div className="grid grid-cols-2 gap-3">
             <button className="flex items-center justify-center py-2.5 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
               <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -184,7 +184,7 @@ const Login = () => {
               </svg>
               Facebook
             </button>
-          </div>
+          </div> */}
           
           {/* Sign up link */}
           <p className="text-sm text-center text-gray-500 mt-6">
@@ -194,9 +194,9 @@ const Login = () => {
         </div>
         
         {/* Footer */}
-        <p className="text-xs text-center text-gray-500 mt-8">
+        {/* <p className="text-xs text-center text-gray-500 mt-8">
           © 2023 ResumeCraft AI. All rights reserved.
-        </p>
+        </p> */}
       </div>
     </div>
   );

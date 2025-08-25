@@ -4,18 +4,22 @@ import Login from './components/Login';
 import Signup from './components/Signup';
 import ResumeBuilder from './components/ResumeBuilder';
 import ResumeBuilderPage from './components/ResumeBuilderPage';
+import ResumeAnalyzer from './components/ResumeAnalyzer';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
+import { ResumeProvider } from './context/ResumeContext';
 
 export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
+        <ResumeProvider>
+          <Routes>
           {/* Public routes */}
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/analyzer" element={<ResumeAnalyzer />} />
           
           {/* Protected routes */}
           <Route 
@@ -42,7 +46,8 @@ export default function App() {
               </ProtectedRoute>
             } 
           />
-        </Routes>
+          </Routes>
+        </ResumeProvider>
       </AuthProvider>
     </BrowserRouter>
   );

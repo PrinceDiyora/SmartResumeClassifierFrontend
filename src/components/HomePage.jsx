@@ -186,10 +186,10 @@ export default function HomePage() {
               </div>
               <h3>AI Classification</h3>
               <p>Instantly classify resumes into roles like Frontend, Backend, or Data Science.</p>
-              <a href="#" className="feature-link">
-                Try Classifier
+              <Link to="#" className="feature-link">
+                Try Analyzer
                 <i className="fas fa-arrow-right"></i>
-              </a>
+              </Link>
             </div>
 
             <div className="feature-card">
@@ -198,10 +198,13 @@ export default function HomePage() {
               </div>
               <h3>Smart Suggestions</h3>
               <p>Get personalized AI-powered suggestions to improve your resume content.</p>
-              <a href="#" className="feature-link">
+              <button
+                onClick={() => isAuthenticated ? navigate('/analyzer') : navigate('/login')}
+                className="feature-link"
+              >
                 Get Suggestions
                 <i className="fas fa-arrow-right"></i>
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -278,12 +281,12 @@ export default function HomePage() {
           <div className="cta-content">
             <h2>Ready to Transform Your Career?</h2>
             <p>Join thousands of professionals who have already landed their dream jobs</p>
-            <button
+            {/* <button
               onClick={() => isAuthenticated ? navigate('/resume-builder') : navigate('/login')}
               className="btn btn-primary btn-large"
             >
               Get Started Free
-            </button>
+            </button> */}
           </div>
         </div>
       </section>
