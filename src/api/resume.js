@@ -48,15 +48,29 @@ export async function getResumeById(id, token) {
 
 // Create a new resume
 export async function createResume(resumeData, token) {
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify(resumeData)
-  });
-  return response.json();
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(resumeData)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Create Resume API Error:', response.status, errorData);
+      throw new Error(`Failed to create resume: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('Create resume response:', data);
+    return data;
+  } catch (error) {
+    console.error('Error creating resume:', error);
+    throw error;
+  }
 }
 
 // Update an existing resume

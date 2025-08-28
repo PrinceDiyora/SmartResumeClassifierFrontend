@@ -8,7 +8,7 @@ const TEMPLATES = [
     id: 'template1',
     name: 'Professional',
     description: 'Clean and professional template suitable for most industries',
-    image: 'https://placehold.co/300x400/e2e8f0/1e293b?text=Professional+Template',
+    image: '/template-images/temp1.png',
     content: `\\documentclass{article}
 \\usepackage[margin=1in]{geometry}
 \\begin{document}
@@ -50,7 +50,7 @@ B.Sc. in Computer Science, University X \\\\
     id: 'template2',
     name: 'Modern',
     description: 'Contemporary design with a clean layout and modern typography',
-    image: 'https://placehold.co/300x400/e2e8f0/1e293b?text=Modern+Template',
+    image: '/template-images/temp2.png',
     content: `\\documentclass{article}
 \\usepackage[margin=0.8in]{geometry}
 \\usepackage{enumitem}
@@ -105,7 +105,7 @@ Digital Solutions LLC
     id: 'template3',
     name: 'Creative',
     description: 'Distinctive design for creative professionals and designers',
-    image: 'https://placehold.co/300x400/e2e8f0/1e293b?text=Creative+Template',
+    image: '/template-images/temp3.png',
     content: `\\documentclass{article}
 \\usepackage[margin=0.75in]{geometry}
 \\usepackage{enumitem}
@@ -162,7 +162,7 @@ Art Institute of Design
     id: 'template4',
     name: 'Technical',
     description: 'Optimized for technical roles with focus on skills and projects',
-    image: 'https://placehold.co/300x400/e2e8f0/1e293b?text=Technical+Template',
+    image: '/template-images/temp4.png',
     content: `\\documentclass{article}
 \\usepackage[margin=0.7in]{geometry}
 \\usepackage{enumitem}
@@ -230,7 +230,7 @@ State University \\hfill GPA: 3.8/4.0
     id: 'template5',
     name: 'Minimal',
     description: 'Clean, minimalist design with focus on content and readability',
-    image: 'https://placehold.co/300x400/e2e8f0/1e293b?text=Minimal+Template',
+    image: '/template-images/temp5.png',
     content: `\\documentclass{article}
 \\usepackage[margin=0.9in]{geometry}
 \\usepackage{enumitem}
@@ -285,7 +285,7 @@ const ResumeTemplates = ({ onTemplateSelect }) => {
   const { token } = useAuth();
   const navigate = useNavigate();
 
-  const handleUseTemplate = async (template) => {
+   const handleUseTemplate = async (template) => {
     try {
       // Create a new resume with the selected template
       const newResume = await createResume({
@@ -304,33 +304,105 @@ const ResumeTemplates = ({ onTemplateSelect }) => {
   };
 
   return (
-    <div className="resume-templates">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Resume Templates</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-        {TEMPLATES.map((template) => (
-          <div 
-            key={template.id} 
-            className="template-card bg-white rounded-lg overflow-hidden shadow-md border border-gray-200 transition-all hover:shadow-lg"
-          >
-            <div className="aspect-w-3 aspect-h-4 bg-gray-100">
-              <img 
-                src={template.image} 
-                alt={`${template.name} Template`} 
-                className="object-cover w-full h-full"
-              />
+    <div className="resume-templates min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-12 px-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Enhanced Header Section */}
+        <div className="text-center mb-16">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-6 shadow-lg">
+            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-6">
+            Choose Your Perfect Resume Template
+          </h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            Select from our professionally designed templates to create a standout resume that matches your style and industry
+          </p>
+          <div className="flex items-center justify-center mt-6 space-x-4">
+            <div className="flex items-center text-sm text-gray-500">
+              <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+              ATS Optimized
             </div>
-            <div className="p-4">
-              <h3 className="text-lg font-semibold text-gray-800">{template.name}</h3>
-              <p className="text-sm text-gray-600 mt-1 mb-4">{template.description}</p>
-              <button
-                onClick={() => handleUseTemplate(template)}
-                className="w-full py-2 px-4 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-              >
-                Use Template
-              </button>
+            <div className="flex items-center text-sm text-gray-500">
+              <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+              Professional Design
+            </div>
+            <div className="flex items-center text-sm text-gray-500">
+              <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+              Easy Customization
             </div>
           </div>
-        ))}
+        </div>
+
+        {/* Template Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
+          {TEMPLATES.map((template, index) => (
+            <div 
+              key={template.id} 
+              className="template-card group bg-white/80 backdrop-blur-sm rounded-3xl overflow-hidden shadow-xl border border-white/20 transition-all duration-500 hover:shadow-2xl hover:-translate-y-3 hover:scale-105 cursor-pointer h-[620px] flex flex-col relative"
+            >
+              {/* Enhanced Template Image Container */}
+              <div className="relative overflow-hidden bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex-shrink-0">
+                <div className="w-full h-80 flex items-center justify-center p-4">
+                  <img 
+                    src={template.image} 
+                    alt={`${template.name} Template`} 
+                    className="w-full h-full object-contain transition-all duration-500 group-hover:scale-110 group-hover:rotate-1"
+                  />
+                </div>
+                
+                {/* Enhanced Template Badge */}
+                <div className="absolute top-4 right-4">
+                  <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg border border-white/20">
+                    Template {index + 1}
+                  </span>
+                </div>
+                
+                {/* Hover Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center">
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="bg-white rounded-full p-3 shadow-lg">
+                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Enhanced Template Info */}
+              <div className="p-6 flex-1 flex flex-col justify-between">
+                <div className="mb-4">
+                  <div className="flex items-center mb-2">
+                    <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors duration-300">
+                      {template.name}
+                    </h3>
+                    <div className="ml-2 w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"></div>
+                  </div>
+                  <p className="text-gray-600 leading-relaxed text-sm line-clamp-3">
+                    {template.description}
+                  </p>
+                </div>
+                
+                {/* Simple Action Button */}
+                <button
+                  onClick={() => handleUseTemplate(template)}
+                  className="w-full py-3 px-6 bg-blue-600 text-white text-sm font-semibold rounded-2xl hover:bg-blue-700 transition-all duration-300"
+                >
+                  Use This Template
+                </button>
+              </div>
+              
+              {/* Decorative Corner Element */}
+              <div className="absolute top-0 left-0 w-16 h-16 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-br-3xl"></div>
+            </div>
+          ))}
+        </div>
+
+        {/* Enhanced Bottom Section */}
+   
       </div>
     </div>
   );
