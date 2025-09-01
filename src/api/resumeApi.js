@@ -10,7 +10,7 @@ const resumeApi = axios.create({
   }
 });
 
-// Analyze a resume PDF file
+// Analyze a resume PDF file (general analysis)
 export const analyzeResume = async (resumeFile) => {
   try {
     const formData = new FormData();
@@ -25,6 +25,26 @@ export const analyzeResume = async (resumeFile) => {
     return response.data;
   } catch (error) {
     console.error('Error analyzing resume:', error);
+    throw error.response?.data?.error || error.message || 'Failed to analyze resume';
+  }
+};
+
+// Analyze a resume PDF file with job description
+export const analyzeResumeWithJob = async (resumeFile, jobDescription) => {
+  try {
+    const formData = new FormData();
+    formData.append('resumeFile', resumeFile);
+    formData.append('jobDescription', jobDescription);
+    
+    const response = await resumeApi.post('/ats-score', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error analyzing resume with job description:', error);
     throw error.response?.data?.error || error.message || 'Failed to analyze resume';
   }
 };

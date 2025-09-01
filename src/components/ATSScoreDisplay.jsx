@@ -80,32 +80,28 @@ const ATSScoreDisplay = ({ result }) => {
       .join(' ');
   };
 
-  // Group suggestions by section
-  const groupedSuggestions = {};
-  let totalIssues = 0;
+  // Use categorized suggestions from backend or create empty structure if not available
+  const categorizedSuggestions = result?.categorized_suggestions || {
+    summary_or_objective: [],
+    experience: [],
+    skills: [],
+    education: [],
+    formatting_and_clarity: []
+  };
   
-  if (result?.improvement_suggestions) {
-    // Initialize groups
-    groupedSuggestions.Skills = [];
-    groupedSuggestions['Work Experience'] = [];
-    groupedSuggestions.Education = [];
-    groupedSuggestions.Formatting = [];
-    
-    // Simple keyword-based grouping
-    result.improvement_suggestions.forEach(suggestion => {
-      totalIssues++;
-      const lowerSuggestion = suggestion.toLowerCase();
-      if (lowerSuggestion.includes('skill') || lowerSuggestion.includes('technology') || lowerSuggestion.includes('proficiency')) {
-        groupedSuggestions.Skills.push(suggestion);
-      } else if (lowerSuggestion.includes('experience') || lowerSuggestion.includes('job') || lowerSuggestion.includes('work')) {
-        groupedSuggestions['Work Experience'].push(suggestion);
-      } else if (lowerSuggestion.includes('education') || lowerSuggestion.includes('degree') || lowerSuggestion.includes('university')) {
-        groupedSuggestions.Education.push(suggestion);
-      } else {
-        groupedSuggestions.Formatting.push(suggestion);
-      }
-    });
-  }
+  // Map backend categories to frontend display categories
+  const groupedSuggestions = {
+    Skills: categorizedSuggestions.skills || [],
+    'Work Experience': categorizedSuggestions.experience || [],
+    Education: categorizedSuggestions.education || [],
+    Formatting: [...(categorizedSuggestions.formatting_and_clarity || []), ...(categorizedSuggestions.summary_or_objective || [])]
+  };
+  
+  // Calculate total issues
+  let totalIssues = 0;
+  Object.values(categorizedSuggestions).forEach(suggestions => {
+    totalIssues += suggestions.length;
+  });
 
   // Define category data
   const categories = [

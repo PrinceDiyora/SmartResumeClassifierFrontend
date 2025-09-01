@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext } from 'react';
-import { analyzeResume as analyzeResumeApi, fixResumeIssues as fixResumeIssuesApi } from '../api/resumeApi';
+import { analyzeResume as analyzeResumeApi, analyzeResumeWithJob as analyzeResumeWithJobApi, fixResumeIssues as fixResumeIssuesApi } from '../api/resumeApi';
 
 // Create the resume context
 const ResumeContext = createContext();
@@ -19,12 +19,15 @@ export const ResumeProvider = ({ children }) => {
   const [isFixing, setIsFixing] = useState(false);
   const [fixedResult, setFixedResult] = useState(null);
   const [showFixedContent, setShowFixedContent] = useState(false);
+  const [jobDescription, setJobDescription] = useState('');
+  const [analysisMode, setAnalysisMode] = useState('general'); // 'general' or 'job'
   const [expandedSections, setExpandedSections] = useState({
     parseRate: true,
     skills: false,
     workExperience: false,
     education: false,
-    formatting: false
+    formatting: false,
+    jobMatch: false
   });
 
   // Toggle section expansion
@@ -58,7 +61,16 @@ export const ResumeProvider = ({ children }) => {
     setResult(null);
 
     try {
-      const analysisResult = await analyzeResumeApi(file);
+      let analysisResult;
+      
+      if (analysisMode === 'job' && jobDescription.trim()) {
+        // Use job description-based analysis
+        analysisResult = await analyzeResumeWithJobApi(file, jobDescription);
+      } else {
+        // Use general analysis
+        analysisResult = await analyzeResumeApi(file);
+      }
+      
       setResult(analysisResult);
     } catch (err) {
       setError(err.message || 'Failed to analyze resume. Please try again.');
@@ -90,12 +102,15 @@ export const ResumeProvider = ({ children }) => {
     setResult(null);
     setFixedResult(null);
     setShowFixedContent(false);
+    setJobDescription('');
+    setAnalysisMode('general');
     setExpandedSections({
       parseRate: true,
       skills: false,
       workExperience: false,
       education: false,
-      formatting: false
+      formatting: false,
+      jobMatch: false
     });
   };
 
@@ -124,6 +139,10 @@ export const ResumeProvider = ({ children }) => {
     isFixing,
     fixedResult,
     showFixedContent,
+    jobDescription,
+    setJobDescription,
+    analysisMode,
+    setAnalysisMode,
     expandedSections,
     handleFileChange,
     analyzeResume,

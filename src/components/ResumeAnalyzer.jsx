@@ -1,5 +1,5 @@
 import React from 'react';
-import { Upload, AlertCircle, CheckCircle, X, FileText, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
+import { Upload, AlertCircle, CheckCircle, X, FileText, ChevronDown, ChevronUp, Sparkles, Briefcase } from 'lucide-react';
 import { useResume } from '../context/ResumeContext';
 
 export default function ResumeAnalyzer() {
@@ -12,6 +12,10 @@ export default function ResumeAnalyzer() {
     isFixing, 
     fixedResult, 
     showFixedContent, 
+    jobDescription,
+    setJobDescription,
+    analysisMode,
+    setAnalysisMode,
     expandedSections,
     handleFileChange,
     analyzeResume,
@@ -21,6 +25,14 @@ export default function ResumeAnalyzer() {
     getColorClass,
     getProgressBarColor
   } = useResume();
+  
+  // Helper function to format category names for display
+  const formatCategoryName = (category) => {
+    return category
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
   
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,6 +57,33 @@ export default function ResumeAnalyzer() {
       {!result && (
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Analysis Mode Toggle */}
+            <div className="flex justify-center mb-6">
+              <div className="inline-flex rounded-md shadow-sm" role="group">
+                <button
+                  type="button"
+                  className={`px-4 py-2 text-sm font-medium rounded-l-lg ${analysisMode === 'general' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 border border-gray-300'}`}
+                  onClick={() => setAnalysisMode('general')}
+                >
+                  <div className="flex items-center">
+                    <CheckCircle size={16} className="mr-2" />
+                    <span>General Analysis</span>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  className={`px-4 py-2 text-sm font-medium rounded-r-lg ${analysisMode === 'job' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 border border-gray-300'}`}
+                  onClick={() => setAnalysisMode('job')}
+                >
+                  <div className="flex items-center">
+                    <Briefcase size={16} className="mr-2" />
+                    <span>Job Match Analysis</span>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Resume Upload */}
             <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-8 cursor-pointer hover:bg-gray-50 transition-colors">
               <input
                 type="file"
@@ -86,6 +125,26 @@ export default function ResumeAnalyzer() {
               </div>
             )}
 
+            {/* Job Description Input (only shown when job match mode is selected) */}
+            {analysisMode === 'job' && (
+              <div className="mt-6">
+                <label htmlFor="job-description" className="block text-sm font-medium text-gray-700 mb-2">
+                  Job Description
+                </label>
+                <textarea
+                  id="job-description"
+                  rows="6"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  placeholder="Paste the job description here..."
+                  value={jobDescription}
+                  onChange={(e) => setJobDescription(e.target.value)}
+                ></textarea>
+                <p className="mt-1 text-sm text-gray-500">
+                  Paste the job description to analyze how well your resume matches the requirements.
+                </p>
+              </div>
+            )}
+
             {error && (
               <div className="flex items-center bg-red-50 p-3 rounded-md text-red-700">
                 <AlertCircle size={20} className="mr-2" />
@@ -96,8 +155,8 @@ export default function ResumeAnalyzer() {
             <div className="flex justify-center">
               <button
                 type="submit"
-                disabled={!file || loading}
-                className={`inline-flex items-center justify-center px-8 py-3 font-medium rounded-md bg-gradient-to-r from-indigo-600 to-cyan-500 text-white hover:opacity-90 hover:-translate-y-0.5 transition-all ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                disabled={!file || loading || (analysisMode === 'job' && !jobDescription.trim())}
+                className={`inline-flex items-center justify-center px-8 py-3 font-medium rounded-md bg-gradient-to-r from-indigo-600 to-cyan-500 text-white hover:opacity-90 hover:-translate-y-0.5 transition-all ${loading || (analysisMode === 'job' && !jobDescription.trim()) ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
                 {loading ? (
                   <>
@@ -153,7 +212,7 @@ export default function ResumeAnalyzer() {
                 </div>
                 <div className="text-center mb-4">
                   <span className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-gray-100">
-                    {showFixedContent ? 0 : (result?.improvement_suggestions?.length || 0)} Issues
+                    {showFixedContent ? 0 : (result?.categorized_suggestions ? Object.values(result.categorized_suggestions).flat().length : 0)} Issues
                   </span>
                 </div>
               </div>
@@ -197,6 +256,21 @@ export default function ResumeAnalyzer() {
                     </span>
                   </div>
                 </div>
+                
+                {/* Job Match Score - Only shown when job match analysis was used */}
+                {result?.job_match_score !== undefined && (
+                  <div className="p-3 rounded-lg bg-purple-50 border border-purple-100">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+                        <span className="font-medium">JOB MATCH</span>
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getColorClass(result?.job_match_score || 0)}`}>
+                        {result?.job_match_score || 0}%
+                      </span>
+                    </div>
+                  </div>
+                )}
                 
                 <div className="p-3 rounded-lg bg-purple-50 border border-purple-100">
                   <div className="flex items-center justify-between">
@@ -303,11 +377,7 @@ export default function ResumeAnalyzer() {
                       </div>
                       <div className="flex items-center">
                         <span className="mr-2 px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
-                          {result?.improvement_suggestions?.filter(s => 
-                            s.toLowerCase().includes('skill') || 
-                            s.toLowerCase().includes('technology') || 
-                            s.toLowerCase().includes('proficiency')
-                          ).length || 0} issues
+                          {showFixedContent ? 0 : (result?.categorized_suggestions?.skills?.length || 0)} issues
                         </span>
                         {expandedSections.skills ? (
                           <ChevronUp size={20} className="text-gray-600" />
@@ -322,27 +392,16 @@ export default function ResumeAnalyzer() {
                         <p className="text-gray-600 mb-4">Skills that match the job description increase your chances of getting past ATS filters and impressing recruiters.</p>
                         
                         <div className="space-y-3">
-                          {result?.improvement_suggestions
-                            ?.filter(s => 
-                              s.toLowerCase().includes('skill') || 
-                              s.toLowerCase().includes('technology') || 
-                              s.toLowerCase().includes('proficiency')
-                            )
-                            .map((suggestion, index) => (
-                              <div key={index} className="flex items-start p-3 border border-red-100 rounded-lg bg-red-50">
-                                <AlertCircle size={20} className="text-red-500 mr-2 mt-0.5 flex-shrink-0" />
-                                <div>
-                                  <p className="text-gray-800">{suggestion}</p>
-                                </div>
+                          {!showFixedContent && result?.categorized_suggestions?.skills?.map((suggestion, index) => (
+                            <div key={index} className="flex items-start p-3 border border-red-100 rounded-lg bg-red-50">
+                              <AlertCircle size={20} className="text-red-500 mr-2 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-gray-800">{suggestion}</p>
                               </div>
-                            ))
-                          }
+                            </div>
+                          ))}
                           
-                          {(result?.improvement_suggestions?.filter(s => 
-                            s.toLowerCase().includes('skill') || 
-                            s.toLowerCase().includes('technology') || 
-                            s.toLowerCase().includes('proficiency')
-                          ).length === 0) && (
+                          {(showFixedContent || !result?.categorized_suggestions?.skills || result.categorized_suggestions.skills.length === 0) && (
                             <div className="flex items-start p-3 border border-green-100 rounded-lg bg-green-50">
                               <CheckCircle size={20} className="text-green-500 mr-2 mt-0.5 flex-shrink-0" />
                               <div>
@@ -367,13 +426,7 @@ export default function ResumeAnalyzer() {
                       </div>
                       <div className="flex items-center">
                         <span className="mr-2 px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
-                          {showFixedContent ? 0 : (result?.improvement_suggestions?.filter(s => 
-                            s.toLowerCase().includes('experience') || 
-                            s.toLowerCase().includes('job') || 
-                            s.toLowerCase().includes('work') || 
-                            s.toLowerCase().includes('position') || 
-                            s.toLowerCase().includes('role')
-                          ).length || 0)} issues
+                          {showFixedContent ? 0 : (result?.categorized_suggestions?.experience?.length || 0)} issues
                         </span>
                         {expandedSections.workExperience ? (
                           <ChevronUp size={20} className="text-gray-600" />
@@ -388,31 +441,16 @@ export default function ResumeAnalyzer() {
                         <p className="text-gray-600 mb-4">Your work experience should highlight achievements and responsibilities relevant to the job you're applying for.</p>
                         
                         <div className="space-y-3">
-                          {!showFixedContent && result?.improvement_suggestions
-                            ?.filter(s => 
-                              s.toLowerCase().includes('experience') || 
-                              s.toLowerCase().includes('job') || 
-                              s.toLowerCase().includes('work') || 
-                              s.toLowerCase().includes('position') || 
-                              s.toLowerCase().includes('role')
-                            )
-                            .map((suggestion, index) => (
-                              <div key={index} className="flex items-start p-3 border border-red-100 rounded-lg bg-red-50">
-                                <AlertCircle size={20} className="text-red-500 mr-2 mt-0.5 flex-shrink-0" />
-                                <div>
-                                  <p className="text-gray-800">{suggestion}</p>
-                                </div>
+                          {!showFixedContent && result?.categorized_suggestions?.experience?.map((suggestion, index) => (
+                            <div key={index} className="flex items-start p-3 border border-red-100 rounded-lg bg-red-50">
+                              <AlertCircle size={20} className="text-red-500 mr-2 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-gray-800">{suggestion}</p>
                               </div>
-                            ))
-                          }
+                            </div>
+                          ))}
                           
-                          {(showFixedContent || (result?.improvement_suggestions?.filter(s => 
-                            s.toLowerCase().includes('experience') || 
-                            s.toLowerCase().includes('job') || 
-                            s.toLowerCase().includes('work') || 
-                            s.toLowerCase().includes('position') || 
-                            s.toLowerCase().includes('role')
-                          ).length === 0)) && (
+                          {(showFixedContent || !result?.categorized_suggestions?.experience || result.categorized_suggestions.experience.length === 0) && (
                             <div className="flex items-start p-3 border border-green-100 rounded-lg bg-green-50">
                               <CheckCircle size={20} className="text-green-500 mr-2 mt-0.5 flex-shrink-0" />
                               <div>
@@ -425,6 +463,91 @@ export default function ResumeAnalyzer() {
                     )}
                   </div>
 
+                  {/* Job Match Section - Only shown when job match analysis was used */}
+                  {result?.job_match_score !== undefined && (
+                    <div className="bg-white rounded-lg border border-gray-200 mb-4 overflow-hidden">
+                      <div 
+                        className="p-4 border-b flex items-center justify-between cursor-pointer"
+                        onClick={() => toggleSection('jobMatch')}
+                      >
+                        <div className="flex items-center">
+                          <Briefcase size={18} className="mr-2 text-gray-600" />
+                          <h3 className="font-bold">JOB MATCH</h3>
+                        </div>
+                        <div className="flex items-center">
+                          <span className="mr-2 px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">
+                            {result?.missing_keywords?.length || 0} missing keywords
+                          </span>
+                          {expandedSections.jobMatch ? (
+                            <ChevronUp size={20} className="text-gray-600" />
+                          ) : (
+                            <ChevronDown size={20} className="text-gray-600" />
+                          )}
+                        </div>
+                      </div>
+                      
+                      {expandedSections.jobMatch && (
+                        <div className="p-4">
+                          <p className="text-gray-600 mb-4">This analysis shows how well your resume matches the job description you provided.</p>
+                          
+                          {/* Job Match Score */}
+                          <div className="mb-6">
+                            <h4 className="font-medium mb-2">Job Match Score</h4>
+                            <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full rounded-full ${getProgressBarColor(result?.job_match_score || 0)}`}
+                                style={{ width: `${result?.job_match_score || 0}%` }}
+                              ></div>
+                            </div>
+                            <div className="mt-1 text-sm text-gray-500 text-right">{result?.job_match_score || 0}%</div>
+                          </div>
+                          
+                          {/* Missing Keywords */}
+                          {result?.missing_keywords && result.missing_keywords.length > 0 && (
+                            <div className="mb-6">
+                              <h4 className="font-medium mb-2">Missing Keywords</h4>
+                              <div className="flex flex-wrap gap-2">
+                                {result.missing_keywords.map((keyword, index) => (
+                                  <span key={index} className="px-2 py-1 bg-red-50 text-red-700 text-xs font-medium rounded-full border border-red-100">
+                                    {keyword}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Job-specific Suggestions */}
+                          <div className="space-y-3">
+                            <h4 className="font-medium mb-2">Job-specific Suggestions</h4>
+                            {result?.categorized_suggestions && Object.values(result.categorized_suggestions).flat().length > 0 ? (
+                              <div className="space-y-3">
+                                {Object.entries(result.categorized_suggestions).map(([category, suggestions]) => (
+                                  suggestions.map((suggestion, index) => (
+                                    <div key={`${category}-${index}`} className="flex items-start p-3 border border-amber-100 rounded-lg bg-amber-50">
+                                      <AlertCircle size={20} className="text-amber-500 mr-2 mt-0.5 flex-shrink-0" />
+                                      <div>
+                                        <p className="text-gray-800">
+                                          <span className="font-medium">{formatCategoryName(category)}:</span> {suggestion}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  ))
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="flex items-start p-3 border border-green-100 rounded-lg bg-green-50">
+                                <CheckCircle size={20} className="text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <p className="text-gray-800">Your resume is well-matched to this job description!</p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
                   {/* Education Section */}
                   <div className="bg-white rounded-lg border border-gray-200 mb-4 overflow-hidden">
                     <div 
@@ -437,13 +560,7 @@ export default function ResumeAnalyzer() {
                       </div>
                       <div className="flex items-center">
                         <span className="mr-2 px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
-                          {showFixedContent ? 0 : (result?.improvement_suggestions?.filter(s => 
-                            s.toLowerCase().includes('education') || 
-                            s.toLowerCase().includes('degree') || 
-                            s.toLowerCase().includes('university') || 
-                            s.toLowerCase().includes('college') || 
-                            s.toLowerCase().includes('school')
-                          ).length || 0)} issues
+                          {showFixedContent ? 0 : (result?.categorized_suggestions?.education?.length || 0)} issues
                         </span>
                         {expandedSections.education ? (
                           <ChevronUp size={20} className="text-gray-600" />
@@ -458,31 +575,16 @@ export default function ResumeAnalyzer() {
                         <p className="text-gray-600 mb-4">Your education section should be clear, concise, and highlight relevant academic achievements.</p>
                         
                         <div className="space-y-3">
-                          {!showFixedContent && result?.improvement_suggestions
-                            ?.filter(s => 
-                              s.toLowerCase().includes('education') || 
-                              s.toLowerCase().includes('degree') || 
-                              s.toLowerCase().includes('university') || 
-                              s.toLowerCase().includes('college') || 
-                              s.toLowerCase().includes('school')
-                            )
-                            .map((suggestion, index) => (
-                              <div key={index} className="flex items-start p-3 border border-red-100 rounded-lg bg-red-50">
-                                <AlertCircle size={20} className="text-red-500 mr-2 mt-0.5 flex-shrink-0" />
-                                <div>
-                                  <p className="text-gray-800">{suggestion}</p>
-                                </div>
+                          {!showFixedContent && result?.categorized_suggestions?.education?.map((suggestion, index) => (
+                            <div key={index} className="flex items-start p-3 border border-red-100 rounded-lg bg-red-50">
+                              <AlertCircle size={20} className="text-red-500 mr-2 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-gray-800">{suggestion}</p>
                               </div>
-                            ))
-                          }
+                            </div>
+                          ))}
                           
-                          {(showFixedContent || (result?.improvement_suggestions?.filter(s => 
-                            s.toLowerCase().includes('education') || 
-                            s.toLowerCase().includes('degree') || 
-                            s.toLowerCase().includes('university') || 
-                            s.toLowerCase().includes('college') || 
-                            s.toLowerCase().includes('school')
-                          ).length === 0)) && (
+                          {(showFixedContent || !result?.categorized_suggestions?.education || result.categorized_suggestions.education.length === 0) && (
                             <div className="flex items-start p-3 border border-green-100 rounded-lg bg-green-50">
                               <CheckCircle size={20} className="text-green-500 mr-2 mt-0.5 flex-shrink-0" />
                               <div>
@@ -507,14 +609,7 @@ export default function ResumeAnalyzer() {
                       </div>
                       <div className="flex items-center">
                         <span className="mr-2 px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
-                          {showFixedContent ? 0 : (result?.improvement_suggestions?.filter(s => 
-                            s.toLowerCase().includes('format') || 
-                            s.toLowerCase().includes('layout') || 
-                            s.toLowerCase().includes('structure') || 
-                            s.toLowerCase().includes('clarity') || 
-                            s.toLowerCase().includes('spelling') || 
-                            s.toLowerCase().includes('grammar')
-                          ).length || 0)} issues
+                          {showFixedContent ? 0 : (result?.categorized_suggestions?.formatting_and_clarity?.length || 0)} issues
                         </span>
                         {expandedSections.formatting ? (
                           <ChevronUp size={20} className="text-gray-600" />
@@ -529,33 +624,16 @@ export default function ResumeAnalyzer() {
                         <p className="text-gray-600 mb-4">Clear formatting ensures your resume is easy to read by both ATS systems and human recruiters.</p>
                         
                         <div className="space-y-3">
-                          {!showFixedContent && result?.improvement_suggestions
-                            ?.filter(s => 
-                              s.toLowerCase().includes('format') || 
-                              s.toLowerCase().includes('layout') || 
-                              s.toLowerCase().includes('structure') || 
-                              s.toLowerCase().includes('clarity') || 
-                              s.toLowerCase().includes('spelling') || 
-                              s.toLowerCase().includes('grammar')
-                            )
-                            .map((suggestion, index) => (
-                              <div key={index} className="flex items-start p-3 border border-red-100 rounded-lg bg-red-50">
-                                <AlertCircle size={20} className="text-red-500 mr-2 mt-0.5 flex-shrink-0" />
-                                <div>
-                                  <p className="text-gray-800">{suggestion}</p>
-                                </div>
+                          {!showFixedContent && result?.categorized_suggestions?.formatting_and_clarity?.map((suggestion, index) => (
+                            <div key={index} className="flex items-start p-3 border border-red-100 rounded-lg bg-red-50">
+                              <AlertCircle size={20} className="text-red-500 mr-2 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-gray-800">{suggestion}</p>
                               </div>
-                            ))
-                          }
+                            </div>
+                          ))}
                           
-                          {(showFixedContent || (result?.improvement_suggestions?.filter(s => 
-                            s.toLowerCase().includes('format') || 
-                            s.toLowerCase().includes('layout') || 
-                            s.toLowerCase().includes('structure') || 
-                            s.toLowerCase().includes('clarity') || 
-                            s.toLowerCase().includes('spelling') || 
-                            s.toLowerCase().includes('grammar')
-                          ).length === 0)) && (
+                          {(showFixedContent || !result?.categorized_suggestions?.formatting_and_clarity || result.categorized_suggestions.formatting_and_clarity.length === 0) && (
                             <div className="flex items-start p-3 border border-green-100 rounded-lg bg-green-50">
                               <CheckCircle size={20} className="text-green-500 mr-2 mt-0.5 flex-shrink-0" />
                               <div>
