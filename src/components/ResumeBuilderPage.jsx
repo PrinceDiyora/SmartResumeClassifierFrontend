@@ -1,13 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getResumeInfo } from '../api/resumeInfo';
 import ResumeTemplates from './ResumeTemplates';
 import ResumeList from './ResumeList';
-import { Menu, FileText, User, LogOut } from 'lucide-react';
+import { Menu, FileText, User, LogOut, Plus, Edit3 } from 'lucide-react';
 
 const ResumeBuilderPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { isAuthenticated, currentUser, logout } = useAuth();
+  const [hasResumeInfo, setHasResumeInfo] = useState(false);
+  const [loadingResumeInfo, setLoadingResumeInfo] = useState(true);
+  const { isAuthenticated, currentUser, logout, token } = useAuth();
+
+  // Check if user has existing resume info
+  useEffect(() => {
+    const checkResumeInfo = async () => {
+      if (!token) {
+        setLoadingResumeInfo(false);
+        return;
+      }
+      
+      try {
+        const resumeInfo = await getResumeInfo(token);
+        setHasResumeInfo(!!resumeInfo);
+      } catch (error) {
+        // If 404, user doesn't have resume info yet
+        setHasResumeInfo(false);
+      } finally {
+        setLoadingResumeInfo(false);
+      }
+    };
+
+    checkResumeInfo();
+  }, [token]);
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
@@ -70,6 +95,10 @@ const ResumeBuilderPage = () => {
               <div className="text-indigo-600"><FileText size={18} /></div>
               <span>Resume Builder</span>
             </Link>
+            <Link to="/resume-form" className="flex items-center gap-2 p-3 text-gray-700 rounded-lg hover:bg-indigo-50 transition-colors">
+              <div className="text-indigo-600"><Edit3 size={18} /></div>
+              <span>Create Resume Info</span>
+            </Link>
           </nav>
           
           <div className="p-4 border-t">
@@ -91,8 +120,33 @@ const ResumeBuilderPage = () => {
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-6 py-8 max-w-7xl">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Resume Builder</h1>
-          <p className="text-gray-600">Choose from professional templates or manage your existing resumes</p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">Resume Builder</h1>
+              <p className="text-gray-600">Choose from professional templates or manage your existing resumes</p>
+            </div>
+            <Link 
+              to="/resume-form" 
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-indigo-200 transition-all duration-200 hover:transform hover:scale-105 font-semibold"
+            >
+              {loadingResumeInfo ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  Loading...
+                </>
+              ) : hasResumeInfo ? (
+                <>
+                  <Edit3 size={20} />
+                  Edit Resume Info
+                </>
+              ) : (
+                <>
+                  <Plus size={20} />
+                  Create Resume Info
+                </>
+              )}
+            </Link>
+          </div>
         </div>
         
         {/* Resume Templates Section */}
