@@ -191,7 +191,7 @@ export default function HomePage() {
               </div>
               <h3>AI Classification</h3>
               <p>Instantly classify resumes into roles like Frontend, Backend, or Data Science.</p>
-              <Link to="#" className="feature-link">
+              <Link to="/role-predictor" className="feature-link">
                 Try Analyzer
                 <i className="fas fa-arrow-right"></i>
               </Link>
