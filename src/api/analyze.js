@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000/api/analyze';
+const API_URL = 'http://localhost:5000/api/analyze';
 
 // Analyze a resume PDF file
 export async function analyzeResume(resumeFile) {

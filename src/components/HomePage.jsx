@@ -100,19 +100,23 @@ export default function HomePage() {
                 ))}
               </div>
               <div className="hero-buttons">
-                <button
-                  onClick={() => isAuthenticated ? navigate('/resume-builder') : navigate('/login')}
+                {/* Resume Info Button */}
+                <Link
+                  to={isAuthenticated ? "/resume-form" : "/login"}
                   className="btn btn-primary btn-large"
                 >
                   <Play size={18} />
-                  Start Building
-                </button>
+                  Fill Resume Info
+                </Link>
+
+                {/* Watch Demo */}
                 <button className="btn btn-outline btn-large">
                   <Play size={18} />
                   Watch Demo
                 </button>
               </div>
             </div>
+
             <div className="hero-visual">
               <div className="hero-card">
                 <div className="card-header">
@@ -151,6 +155,7 @@ export default function HomePage() {
         </div>
       </section>
 
+
       {/* Features Section */}
       <section id="features" className="features-section">
         <div className="container">
@@ -171,13 +176,13 @@ export default function HomePage() {
               </div>
               <h3>Smart Resume Builder</h3>
               <p>Create professional resumes with our AI-powered builder and beautiful LaTeX templates.</p>
-              <button
-                onClick={() => isAuthenticated ? navigate('/resume-builder') : navigate('/login')}
+              <Link
+                to={isAuthenticated ? "/builder" : "/login"}
                 className="feature-link"
               >
-                Start Building
+                Fill Resume Info
                 <i className="fas fa-arrow-right"></i>
-              </button>
+              </Link>
             </div>
 
             <div className="feature-card">

@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import MonacoEditor from '@monaco-editor/react';
 import { compileAndSave } from '../api/compile';
 import { getResumeById, updateResume } from '../api/resume';
+import { getResumeInfo } from '../api/resumeInfo';
+import { generateDynamicTemplate } from '../utils/templateGenerator';
 import { Menu, FileText, Settings, Sun, Moon, Eye, EyeOff, Maximize2, Download, Save, FileDown, ChevronDown, Loader2, Code, FileOutput } from 'lucide-react';
 import { useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
@@ -14,42 +16,45 @@ export default function ResumeBuilder() {
   const [theme, setTheme] = useState('light');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [resumeTitle, setResumeTitle] = useState('My Resume');
-  const [latex, setLatex] = useState(`\documentclass{article}
+  
+  const defaultTemplate = `\\documentclass{article}
 \\usepackage[margin=1in]{geometry}
-\begin{document}
+\\begin{document}
 
-\section*{John Doe}
-\textbf{Email:} john.doe@email.com \\
-\textbf{Phone:} (123) 456-7890 \\
-\textbf{LinkedIn:} linkedin.com/in/johndoe
+\\section*{John Doe}
+\\textbf{Email:} john.doe@email.com \\\\
+\\textbf{Phone:} (123) 456-7890 \\\\
+\\textbf{LinkedIn:} linkedin.com/in/johndoe
 
-\section*{Education}
-B.Sc. in Computer Science, University X \\
-*GPA: 3.8/4.0* \\
+\\section*{Education}
+B.Sc. in Computer Science, University X \\\\
+*GPA: 3.8/4.0* \\\\
 *Relevant Coursework: Data Structures, Algorithms, Web Development*
 
-\section*{Experience}
-\subsection*{Software Engineer Intern | ABC Corp | Summer 2023}
-\begin{itemize}
-    \item Developed and maintained web applications using React and Node.js.
-    \item Collaborated with a team of developers to create new features.
-    \item Wrote unit tests to ensure code quality.
-\end{itemize}
+\\section*{Experience}
+\\subsection*{Software Engineer Intern | ABC Corp | Summer 2023}
+\\begin{itemize}
+    \\item Developed and maintained web applications using React and Node.js.
+    \\item Collaborated with a team of developers to create new features.
+    \\item Wrote unit tests to ensure code quality.
+\\end{itemize}
 
-\subsection*{Web Developer | XYZ Inc | 2022-2023}
-\begin{itemize}
-    \item Designed and developed responsive websites for clients.
-    \item Optimized websites for speed and performance.
-\end{itemize}
+\\subsection*{Web Developer | XYZ Inc | 2022-2023}
+\\begin{itemize}
+    \\item Designed and developed responsive websites for clients.
+    \\item Optimized websites for speed and performance.
+\\end{itemize}
 
-\section*{Skills}
-\begin{itemize}
-    \item \textbf{Programming Languages:} JavaScript, Python, Java, C++
-    \item \textbf{Frameworks:} React, Node.js, Express
-    \item \textbf{Tools:} Git, Docker, Webpack
-\end{itemize}
+\\section*{Skills}
+\\begin{itemize}
+    \\item \\textbf{Programming Languages:} JavaScript, Python, Java, C++
+    \\item \\textbf{Frameworks:} React, Node.js, Express
+    \\item \\textbf{Tools:} Git, Docker, Webpack
+\\end{itemize}
 
-\end{document}`);
+\\end{document}`;
+
+  const [latex, setLatex] = useState(defaultTemplate);
   const [loading, setLoading] = useState(false);
   const [compileFlash, setCompileFlash] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -57,6 +62,7 @@ B.Sc. in Computer Science, University X \\
   const [pdfUrl, setPdfUrl] = useState(null);
   const [fetchingResume, setFetchingResume] = useState(false);
   const [saveTimeout, setSaveTimeout] = useState(null);
+  const [compilationError, setCompilationError] = useState(null);
   const storageKey = id ? `resume-${id}` : 'resume-draft';
 
   const persistDraft = (nextTitle, nextLatex) => {
@@ -79,43 +85,61 @@ B.Sc. in Computer Science, University X \\
     };
   }, []);
 
-  // Fetch resume data if ID is provided, prefer localStorage draft
+  // Load dynamic template for new resumes or fetch existing resume data
   useEffect(() => {
-    if (id && token) {
-      setFetchingResume(true);
-      const draftJson = localStorage.getItem(storageKey);
-      if (draftJson) {
-        try {
-          const draft = JSON.parse(draftJson);
-          setLatex(draft.content ?? latex);
-          setResumeTitle(draft.title ?? resumeTitle);
-        } catch (_) {}
-      }
+    const loadResumeData = async () => {
+      if (id && token) {
+        // Existing resume - fetch from server
+        setFetchingResume(true);
+        const draftJson = localStorage.getItem(storageKey);
+        if (draftJson) {
+          try {
+            const draft = JSON.parse(draftJson);
+            setLatex(draft.content ?? latex);
+            setResumeTitle(draft.title ?? resumeTitle);
+          } catch (_) {}
+        }
 
-      getResumeById(id, token)
-        .then(data => {
+        try {
+          const data = await getResumeById(id, token);
           if (!draftJson) {
             setLatex(data.content);
             setResumeTitle(data.title);
           }
-        })
-        .catch(err => {
+        } catch (err) {
           console.error('Failed to fetch resume:', err);
           alert('Failed to load resume. Redirecting to resume builder.');
           navigate('/resume-builder');
-        })
-        .finally(() => {
+        } finally {
           setFetchingResume(false);
-        });
-    }
-  }, [id, token, navigate]);
+        }
+      } else if (!id && token) {
+        // New resume - try to load dynamic template
+        try {
+          const resumeInfo = await getResumeInfo(token);
+          if (resumeInfo) {
+            const dynamicTemplate = generateDynamicTemplate(defaultTemplate, resumeInfo);
+            setLatex(dynamicTemplate);
+          }
+        } catch (error) {
+          console.log('No resume info found, using default template');
+          // It's okay if no resume info exists, we'll use the default template
+        }
+      }
+    };
+
+    loadResumeData();
+  }, [id, token, navigate, defaultTemplate]);
 
 
   const handleCompile = async () => {
+    console.log('=== COMPILE STARTED ===');
     setLoading(true);
     setCompileFlash(true);
     setTimeout(() => setCompileFlash(false), 400);
     setPdfUrl(null);
+    setCompilationError(null);
+    
     try {
       // save draft locally first
       persistDraft(resumeTitle, latex);
@@ -123,7 +147,30 @@ B.Sc. in Computer Science, University X \\
       const url = URL.createObjectURL(blob);
       setPdfUrl(url);
     } catch (err) {
-      alert('Failed to compile PDF.');
+      console.error('Compilation error:', err);
+      console.error('Error details:', err.details);
+      
+      if (err.details && err.details.type === 'compilation') {
+        // Show detailed LaTeX compilation error
+        console.log('Setting compilation error:', {
+          message: err.message,
+          stderr: err.details.stderr,
+          stdout: err.details.stdout
+        });
+        setCompilationError({
+          message: err.message,
+          stderr: err.details.stderr,
+          stdout: err.details.stdout
+        });
+      } else {
+        // Show generic error for other types of errors
+        console.log('Setting generic error - no detailed error info available');
+        setCompilationError({
+          message: 'Compilation failed',
+          stderr: 'Failed to compile PDF. Please check your LaTeX code for errors.',
+          stdout: ''
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -304,7 +351,60 @@ B.Sc. in Computer Science, University X \\
               </h2>
               <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-md">Auto-saving</div>
             </div>
-            <div className="h-[calc(100%-2.5rem)] rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+            
+            {compilationError && (
+              <div className="mb-3 bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <h3 className="text-sm font-medium text-red-800 mb-2">
+                      LaTeX Compilation Error
+                    </h3>
+                    
+                    {compilationError.stderr && (
+                      <div className="mb-3">
+                        <h4 className="text-xs font-semibold text-red-700 mb-1">Error Details:</h4>
+                        <pre className="text-xs bg-red-100 p-2 rounded border overflow-x-auto max-h-40 text-red-700 whitespace-pre-wrap font-mono">
+                          {compilationError.stderr}
+                        </pre>
+                      </div>
+                    )}
+                    
+                    {compilationError.stdout && (
+                      <div className="mb-3">
+                        <h4 className="text-xs font-semibold text-red-700 mb-1">Additional Output:</h4>
+                        <pre className="text-xs bg-red-100 p-2 rounded border overflow-x-auto max-h-32 text-red-700 whitespace-pre-wrap font-mono">
+                          {compilationError.stdout}
+                        </pre>
+                      </div>
+                    )}
+                    
+                    <div className="mt-3 text-xs text-red-600">
+                      <p><strong>Common fixes:</strong></p>
+                      <ul className="list-disc list-inside space-y-1 mt-1">
+                        <li>Check for unclosed braces: { }</li>
+                        <li>Ensure all \begin commands have matching \end commands</li>
+                        <li>Remove extra backslashes (\\) at line endings</li>
+                        <li>Check for special characters that need escaping</li>
+                      </ul>
+                    </div>
+                    
+                    <button
+                      onClick={() => setCompilationError(null)}
+                      className="mt-3 text-xs text-red-600 hover:text-red-800 underline"
+                    >
+                      Dismiss Error
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div className={`rounded-lg overflow-hidden border border-gray-200 shadow-sm ${compilationError ? 'h-[calc(100%-15rem)]' : 'h-[calc(100%-2.5rem)]'}`}>
               <MonacoEditor
                 height="100%"
                 defaultLanguage="latex"
