@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { saveResumeInfo, getResumeInfo } from '../api/resumeInfo';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Briefcase, FileText, Mail, Phone, Linkedin, Plus, X, Award, Book, Calendar, CheckCircle, AlertCircle, ArrowLeft, Home } from 'lucide-react';
+import { User, Briefcase, FileText, Mail, Phone, Linkedin, Plus, X, Award, Book, Calendar, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+// Top navigation is replaced locally in this form with a minimal header
+import './Homepage.css';
 
 export default function ResumeForm() {
   const navigate = useNavigate();
@@ -274,41 +276,27 @@ export default function ResumeForm() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* Navigation Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-4 max-w-6xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link 
-                to="/resume-builder" 
-                className="flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition-colors"
-              >
-                <ArrowLeft size={20} />
-                <span className="font-medium">Back to Resume Builder</span>
-              </Link>
-              <div className="h-6 w-px bg-gray-300"></div>
-              <Link to="/" className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center shadow-md">
-                  <FileText size={16} className="text-white" />
-                </div>
-                <span className="text-xl font-bold text-gray-800">ResumeCraft AI</span>
-              </Link>
+      {/* Minimal Header with Logo (left) and Back Button (right) */}
+      <div className="bg-white/70 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+          <div className="logo-container">
+            <div className="logo-icon">
+              <i className="fa-solid fa-rocket"></i>
             </div>
-            <Link 
-              to="/" 
-              className="flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition-colors"
-            >
-              <Home size={20} />
-              <span className="font-medium">Home</span>
-            </Link>
+            <span className="logo-text">ResumeCraft AI</span>
           </div>
+
+          <Link to="/resume-builder" className="btn btn-ghost flex items-center">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Builder
+          </Link>
         </div>
-      </header>
+      </div>
 
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header Section */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-4">
+          <h1 className="hero-title gradient-text mb-4" style={{fontSize:'2.25rem'}}>
             {isExistingInfo ? 'Update Your Resume Information' : 'Create Your Professional Resume'}
           </h1>
           <p className="text-lg text-gray-600 mb-6">
@@ -323,8 +311,8 @@ export default function ResumeForm() {
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${getOverallProgress()}%` }}
+                className="h-full rounded-full transition-all duration-500 ease-out"
+                style={{ background: 'var(--primary-gradient)', width: `${getOverallProgress()}%` }}
               />
             </div>
           </div>
@@ -359,11 +347,11 @@ export default function ResumeForm() {
             {/* Basic Info Section */}
             <div className={`transition-all duration-300 ${activeSection === 'basic' ? 'block' : 'hidden'}`}>
               <div className="space-y-6">
-                <div className="text-center mb-8">
+            <div className="text-center mb-8">
                   <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full mb-4">
                     <User size={24} className="text-white" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-800 mb-2">Basic Information</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Basic Information</h2>
                   <p className="text-gray-600">Let's start with your personal details</p>
                 </div>
                 
@@ -849,7 +837,7 @@ export default function ResumeForm() {
               <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
                 <Link 
                   to="/resume-builder"
-                  className="w-full sm:w-auto px-8 py-3 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium text-center inline-block"
+                  className="btn btn-ghost w-full sm:w-auto text-center"
                 >
                   Cancel
                 </Link>
@@ -861,9 +849,7 @@ export default function ResumeForm() {
                   <button 
                     type="submit" 
                     disabled={isSubmitting}
-                    className={`px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-indigo-200 transition-all duration-200 flex items-center gap-3 font-semibold ${
-                      isSubmitting ? 'opacity-70 cursor-not-allowed transform scale-95' : 'hover:transform hover:scale-105'
-                    }`}
+                    className={`btn btn-primary ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
                   >
                     {isSubmitting ? (
                       <>

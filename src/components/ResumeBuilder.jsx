@@ -4,17 +4,18 @@ import { compileAndSave } from '../api/compile';
 import { getResumeById, updateResume } from '../api/resume';
 import { getResumeInfo } from '../api/resumeInfo';
 import { generateDynamicTemplate } from '../utils/templateGenerator';
-import { Menu, FileText, Settings, Sun, Moon, Eye, EyeOff, Maximize2, Download, Save, FileDown, ChevronDown, Loader2, Code, FileOutput } from 'lucide-react';
+import { FileText, Sun, Moon, Download, FileDown, ChevronDown, Loader2, Code, FileOutput, ChevronLeft } from 'lucide-react';
 import { useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
+// Top navigation is intentionally not used on this page
 import { useAuth } from '../context/AuthContext';
+import './Homepage.css';
 
 export default function ResumeBuilder() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { token } = useAuth();
   const [theme, setTheme] = useState('light');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [resumeTitle, setResumeTitle] = useState('My Resume');
   
   const defaultTemplate = `\\documentclass{article}
@@ -223,38 +224,31 @@ B.Sc. in Computer Science, University X \\\\
 
   return (
     <div className="flex flex-col h-screen font-sans bg-gray-50">
-      {/* Header */}
+      {/* Header (replaces global TopNav on this page) */}
       <header className="flex z-20 justify-between items-center px-6 py-3 bg-white border-b shadow-sm">
         <div className="flex gap-4 items-center">
-          <button 
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <Menu size={20} />
-          </button>
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center shadow-md">
-              <FileText size={16} className="text-white" />
+            <div className="logo-icon">
+              <i className="fa-solid fa-rocket"></i>
             </div>
-            <span className="text-xl font-bold text-gray-800">ResumeCraft AI</span>
+            <span className="logo-text">ResumeCraft AI</span>
           </Link>
-          {id && (
-            <div className="ml-6">
-              <input 
-                type="text" 
-                value={resumeTitle} 
-                onChange={handleTitleChange}
-                className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="Resume Title"
-              />
-            </div>
-          )}
+          <div className="ml-6">
+            <input 
+              type="text" 
+              value={resumeTitle} 
+              onChange={handleTitleChange}
+              className="px-2 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              placeholder="My Professional Resume"
+            />
+          </div>
         </div>
         
         <div className="flex gap-3 items-center">
+          
           <button
             onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-            className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
+            className="btn btn-ghost"
             title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
           >
             {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
@@ -262,7 +256,7 @@ B.Sc. in Computer Science, University X \\\\
           
           <button
             onClick={handleCompile}
-            className="flex gap-2 items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg transition hover:bg-indigo-700 shadow-sm"
+            className="btn btn-primary"
             disabled={loading}
           >
             {loading ? <Loader2 size={18} className="animate-spin" /> : <FileOutput size={18} />}
@@ -272,7 +266,7 @@ B.Sc. in Computer Science, University X \\\\
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex gap-2 items-center px-4 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg transition hover:bg-indigo-100"
+              className="btn btn-ghost"
             >
               <Download size={18} />
               Download
@@ -298,47 +292,18 @@ B.Sc. in Computer Science, University X \\\\
               </div>
             )}
           </div>
+          <button
+            onClick={() => navigate('/resume-builder')}
+            className="btn btn-ghost"
+            title="Back"
+          >
+            <ChevronLeft size={20} />
+            Back
+          </button>
         </div>
       </header>
       
-      {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out`}>
-        <div className="flex flex-col h-full">
-          <div className="p-4 border-b">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center shadow-md">
-                <FileText size={16} className="text-white" />
-              </div>
-              <span className="text-lg font-bold text-gray-800">ResumeCraft AI</span>
-            </div>
-          </div>
-          
-          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-            <Link to="/resume-builder" className="flex items-center gap-2 p-3 text-gray-700 rounded-lg hover:bg-indigo-50 transition-colors">
-              <div className="text-indigo-600"><FileText size={18} /></div>
-              <span>My Resumes</span>
-            </Link>
-            <Link to="/" className="flex items-center gap-2 p-3 text-gray-700 rounded-lg hover:bg-indigo-50 transition-colors">
-              <div className="text-indigo-600"><Settings size={18} /></div>
-              <span>Settings</span>
-            </Link>
-          </nav>
-          
-          <div className="p-4 border-t">
-            <Link to="/resume-builder" className="flex items-center justify-center gap-2 w-full p-2 text-sm font-medium text-white bg-indigo-600 rounded-lg transition hover:bg-indigo-700">
-              <span>Back to My Resumes</span>
-            </Link>
-          </div>
-        </div>
-      </div>
-      
-      {/* Overlay */}
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-20"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      {/* Sidebar removed on this page */}
 
       <div className="flex overflow-hidden flex-col flex-1 lg:flex-row">
         {/* Editor Panel */}

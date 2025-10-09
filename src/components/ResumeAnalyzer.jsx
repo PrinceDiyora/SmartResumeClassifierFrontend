@@ -1,6 +1,8 @@
 import React from 'react';
 import { Upload, AlertCircle, CheckCircle, X, FileText, ChevronDown, ChevronUp, Sparkles, Briefcase } from 'lucide-react';
 import { useResume } from '../context/ResumeContext';
+import TopNav from './TopNav';
+import './Homepage.css';
 
 export default function ResumeAnalyzer() {
   const { 
@@ -44,7 +46,9 @@ export default function ResumeAnalyzer() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <>
+      <TopNav />
+      <div className="max-w-7xl mx-auto p-6">
       <div className="mb-8 text-center">
         <h1 className="text-3xl font-bold mb-2">
           <span className="bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent">Resume Analyzer</span>
@@ -62,7 +66,7 @@ export default function ResumeAnalyzer() {
               <div className="inline-flex rounded-md shadow-sm" role="group">
                 <button
                   type="button"
-                  className={`px-4 py-2 text-sm font-medium rounded-l-lg ${analysisMode === 'general' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 border border-gray-300'}`}
+                  className={`px-4 py-2 text-sm font-medium rounded-l-lg ${analysisMode === 'general' ? 'btn btn-primary' : 'btn btn-ghost'}`}
                   onClick={() => setAnalysisMode('general')}
                 >
                   <div className="flex items-center">
@@ -72,7 +76,7 @@ export default function ResumeAnalyzer() {
                 </button>
                 <button
                   type="button"
-                  className={`px-4 py-2 text-sm font-medium rounded-r-lg ${analysisMode === 'job' ? 'bg-indigo-600 text-white' : 'bg-white text-gray-700 border border-gray-300'}`}
+                  className={`px-4 py-2 text-sm font-medium rounded-r-lg ${analysisMode === 'job' ? 'btn btn-primary' : 'btn btn-ghost'}`}
                   onClick={() => setAnalysisMode('job')}
                 >
                   <div className="flex items-center">
@@ -96,13 +100,7 @@ export default function ResumeAnalyzer() {
                 <Upload size={48} className="text-gray-400 mb-4" />
                 <span className="text-lg font-medium mb-1">Upload your resume</span>
                 <span className="text-sm text-gray-500 mb-4">PDF files only</span>
-                <button
-                  type="button"
-                  className="inline-flex items-center justify-center px-4 py-2 font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
-                  onClick={() => document.getElementById('resume-upload').click()}
-                >
-                  Select File
-                </button>
+                <button type="button" className="btn btn-outline" onClick={() => document.getElementById('resume-upload').click()}>Select File</button>
               </label>
             </div>
 
@@ -153,19 +151,8 @@ export default function ResumeAnalyzer() {
             )}
 
             <div className="flex justify-center">
-              <button
-                type="submit"
-                disabled={!file || loading || (analysisMode === 'job' && !jobDescription.trim())}
-                className={`inline-flex items-center justify-center px-8 py-3 font-medium rounded-md bg-gradient-to-r from-indigo-600 to-cyan-500 text-white hover:opacity-90 hover:-translate-y-0.5 transition-all ${loading || (analysisMode === 'job' && !jobDescription.trim()) ? 'opacity-70 cursor-not-allowed' : ''}`}
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin h-5 w-5 mr-2 border-2 border-white border-t-transparent rounded-full"></div>
-                    Analyzing...
-                  </>
-                ) : (
-                  'Analyze Resume'
-                )}
+              <button type="submit" disabled={!file || loading || (analysisMode === 'job' && !jobDescription.trim())} className={`btn btn-primary ${loading || (analysisMode === 'job' && !jobDescription.trim()) ? 'opacity-70 cursor-not-allowed' : ''}`}>
+                {loading ? 'Analyzing...' : 'Analyze Resume'}
               </button>
             </div>
           </form>
@@ -650,6 +637,7 @@ export default function ResumeAnalyzer() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );                
 }

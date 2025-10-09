@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { predictRole } from '../api/analyze';
+import './Homepage.css';
+import TopNav from './TopNav';
 
 export default function RolePredictor() {
   const [file, setFile] = useState(null);
@@ -50,11 +52,11 @@ export default function RolePredictor() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-6">
+    <>
+      <TopNav />
+      <div className="max-w-3xl mx-auto p-6">
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold mb-2">
-          <span className="bg-gradient-to-r from-indigo-600 to-cyan-500 bg-clip-text text-transparent">Predict Resume Role</span>
-        </h1>
+        <h1 className="hero-title gradient-text mb-2" style={{fontSize:'2rem'}}>Predict Resume Role</h1>
         <p className="text-gray-600">Upload your PDF resume to predict the most likely role</p>
       </div>
 
@@ -71,13 +73,7 @@ export default function RolePredictor() {
             <label htmlFor="role-upload" className="cursor-pointer flex flex-col items-center">
               <span className="text-lg font-medium mb-1">Upload your resume</span>
               <span className="text-sm text-gray-500 mb-4">PDF files only</span>
-              <button
-                type="button"
-                className="inline-flex items-center justify-center px-4 py-2 font-medium rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
-                onClick={() => document.getElementById('role-upload').click()}
-              >
-                Select File
-              </button>
+              <button type="button" className="btn btn-outline" onClick={() => document.getElementById('role-upload').click()}>Select File</button>
             </label>
           </div>
 
@@ -103,11 +99,7 @@ export default function RolePredictor() {
           )}
 
           <div className="flex justify-center">
-            <button
-              type="submit"
-              disabled={!file || loading}
-              className={`inline-flex items-center justify-center px-8 py-3 font-medium rounded-md bg-gradient-to-r from-indigo-600 to-cyan-500 text-white hover:opacity-90 hover:-translate-y-0.5 transition-all ${loading || !file ? 'opacity-70 cursor-not-allowed' : ''}`}
-            >
+            <button type="submit" disabled={!file || loading} className={`btn btn-primary ${loading || !file ? 'opacity-70 cursor-not-allowed' : ''}`}>
               {loading ? 'Predicting…' : 'Predict Role'}
             </button>
           </div>
@@ -129,7 +121,8 @@ export default function RolePredictor() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 

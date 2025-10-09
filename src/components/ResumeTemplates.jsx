@@ -4,6 +4,7 @@ import { createResume } from '../api/resume';
 import { getResumeInfo } from '../api/resumeInfo';
 import { generateDynamicTemplate } from '../utils/templateGenerator';
 import { useNavigate } from 'react-router-dom';
+import './HomePage.css';
 
 // Template Processing Optimization - Cache and performance utilities
 class TemplateCache {
@@ -184,7 +185,7 @@ const SmartTemplateCard = React.memo(({
       className="template-card group bg-white/80 backdrop-blur-sm rounded-3xl overflow-hidden shadow-xl border border-white/20 transition-all duration-500 hover:shadow-2xl hover:-translate-y-3 hover:scale-105 cursor-pointer h-[620px] flex flex-col relative"
     >
       {/* Enhanced Template Image Container */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-100 flex-shrink-0">
+      <div className="relative overflow-hidden bg-gradient-to-br from-gray-50 via-indigo-50 to-purple-50 flex-shrink-0">
         <div className="w-full h-80 flex items-center justify-center p-4">
           {isVisible ? (
             <img 
@@ -204,7 +205,8 @@ const SmartTemplateCard = React.memo(({
         
         {/* Enhanced Template Badge */}
         <div className="absolute top-4 right-4">
-          <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg border border-white/20">
+          <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold text-white shadow-lg border border-white/20"
+                style={{ background: 'var(--primary-gradient)' }}>
             Template {index + 1}
           </span>
         </div>
@@ -220,7 +222,8 @@ const SmartTemplateCard = React.memo(({
         )}
         
         {/* Hover Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center">
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center"
+             style={{ background: 'linear-gradient(135deg, rgba(102,126,234,0.2) 0%, rgba(118,75,162,0.2) 100%)' }}>
           <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <div className="bg-white rounded-full p-3 shadow-lg">
               <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,7 +239,8 @@ const SmartTemplateCard = React.memo(({
       <div className="p-6 flex-1 flex flex-col justify-between">
         <div className="mb-4">
           <div className="flex items-center mb-2">
-            <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors duration-300">
+            <h3 className="text-xl font-bold text-gray-900 transition-colors duration-300"
+                style={{ background: 'var(--primary-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               {template.name}
             </h3>
             <div className="ml-2 w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full"></div>
@@ -255,11 +259,12 @@ const SmartTemplateCard = React.memo(({
         <button
           onClick={() => onTemplateSelect(template)}
           disabled={!isTemplateReady}
-          className={`w-full py-3 px-6 text-sm font-semibold rounded-2xl transition-all duration-300 ${
+          className={`w-full py-3 px-6 text-sm font-semibold rounded-2xl transition-all duration-300 text-white ${
             isTemplateReady 
-              ? 'bg-blue-600 text-white hover:bg-blue-700' 
-              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              ? '' 
+              : 'opacity-60 cursor-not-allowed'
           }`}
+          style={{ background: isTemplateReady ? 'var(--primary-gradient)' : 'var(--primary-gradient)' }}
         >
           {!isTemplateReady ? 'Processing...' : 
            resumeInfo && viewMode === 'personalized' ? 'Use Personalized Template' : 'Use This Template'}
@@ -267,7 +272,8 @@ const SmartTemplateCard = React.memo(({
       </div>
       
       {/* Decorative Corner Element */}
-      <div className="absolute top-0 left-0 w-16 h-16 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-br-3xl"></div>
+      <div className="absolute top-0 left-0 w-16 h-16 rounded-br-3xl"
+           style={{ background: 'linear-gradient(135deg, rgba(102,126,234,0.2) 0%, rgba(118,75,162,0.2) 100%)' }}></div>
     </div>
   );
 });
@@ -929,7 +935,7 @@ const ResumeTemplates = ({ onTemplateSelect }) => {
 
   if (loading) {
     return (
-      <div className="resume-templates min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-12 px-6 flex items-center justify-center">
+    <div className="resume-templates min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50 py-12 px-6 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading your resume information...</p>
@@ -939,16 +945,18 @@ const ResumeTemplates = ({ onTemplateSelect }) => {
   }
 
   return (
-    <div className="resume-templates min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 py-12 px-6">
+    <div className="resume-templates min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50 py-12 px-6">
       <div className="max-w-7xl mx-auto">
         {/* Enhanced Header Section */}
         <div className="text-center mb-16">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-6 shadow-lg">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-6 shadow-lg"
+               style={{ background: 'var(--primary-gradient)' }}>
             <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-6">
+          <h1 className="text-5xl font-bold mb-6"
+              style={{ background: 'var(--primary-gradient)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             Choose Your Perfect Resume Template
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
@@ -972,20 +980,18 @@ const ResumeTemplates = ({ onTemplateSelect }) => {
                 <button
                   onClick={() => setViewMode('personalized')}
                   className={`px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                    viewMode === 'personalized'
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md'
-                      : 'text-gray-600 hover:text-gray-800'
+                    viewMode === 'personalized' ? 'text-white shadow-md' : 'text-gray-600 hover:text-gray-800'
                   }`}
+                  style={viewMode === 'personalized' ? { background: 'var(--primary-gradient)' } : {}}
                 >
                   Personalized Templates
                 </button>
                 <button
                   onClick={() => setViewMode('default')}
                   className={`px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-300 ${
-                    viewMode === 'default'
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-md'
-                      : 'text-gray-600 hover:text-gray-800'
+                    viewMode === 'default' ? 'text-white shadow-md' : 'text-gray-600 hover:text-gray-800'
                   }`}
+                  style={viewMode === 'default' ? { background: 'var(--primary-gradient)' } : {}}
                 >
                   Default Templates
                 </button>
@@ -1034,11 +1040,11 @@ const ResumeTemplates = ({ onTemplateSelect }) => {
               ATS Optimized
             </div>
             <div className="flex items-center text-sm text-gray-500">
-              <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+              <div className="w-2 h-2 rounded-full mr-2" style={{ background: 'var(--primary-color)' }}></div>
               Professional Design
             </div>
             <div className="flex items-center text-sm text-gray-500">
-              <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+              <div className="w-2 h-2 rounded-full mr-2" style={{ background: 'var(--secondary-color)' }}></div>
               {resumeInfo && viewMode === 'personalized' ? 'Personalized Content' : 'Easy Customization'}
             </div>
           </div>

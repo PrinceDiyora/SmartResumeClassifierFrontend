@@ -5,6 +5,8 @@ import { getResumeInfo } from '../api/resumeInfo';
 import ResumeTemplates from './ResumeTemplates';
 import ResumeList from './ResumeList';
 import { Menu, FileText, User, LogOut, Plus, Edit3 } from 'lucide-react';
+import './Homepage.css';
+import TopNav from './TopNav';
 
 const ResumeBuilderPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -36,43 +38,7 @@ const ResumeBuilderPage = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="flex z-20 justify-between items-center px-6 py-3 bg-white border-b shadow-sm">
-        <div className="flex gap-4 items-center">
-          <button 
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <Menu size={20} />
-          </button>
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center shadow-md">
-              <FileText size={16} className="text-white" />
-            </div>
-            <span className="text-xl font-bold text-gray-800">ResumeCraft AI</span>
-          </Link>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          {isAuthenticated && (
-            <div className="relative group">
-              <button className="flex items-center gap-2 py-2 px-3 rounded-lg hover:bg-gray-100 transition-colors">
-                <User size={20} className="text-gray-600" />
-                <span className="text-sm font-medium text-gray-700">{currentUser?.email}</span>
-              </button>
-              <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-100 overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                <button
-                  onClick={logout}
-                  className="flex w-full items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                >
-                  <LogOut size={16} />
-                  Sign Out
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </header>
+      <TopNav />
       
       {/* Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out`}>
@@ -122,12 +88,12 @@ const ResumeBuilderPage = () => {
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">Resume Builder</h1>
-              <p className="text-gray-600">Choose from professional templates or manage your existing resumes</p>
+              <h1 className="section-title">Resume Builder</h1>
+              <p className="section-subtitle">Choose from professional templates or manage your existing resumes</p>
             </div>
             <Link 
               to="/resume-form" 
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-indigo-200 transition-all duration-200 hover:transform hover:scale-105 font-semibold"
+              className="btn btn-primary btn-large"
             >
               {loadingResumeInfo ? (
                 <>
@@ -163,7 +129,7 @@ const ResumeBuilderPage = () => {
       {/* Footer */}
       <footer className="bg-white border-t py-6">
         <div className="container mx-auto px-6 text-center text-gray-500 text-sm">
-          <p>&copy; 2023 ResumeCraft AI. All rights reserved.</p>
+          <p>&copy; 2025 ResumeCraft AI. All rights reserved.</p>
         </div>
       </footer>
     </div>
