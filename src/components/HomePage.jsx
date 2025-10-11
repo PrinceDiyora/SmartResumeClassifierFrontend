@@ -4,7 +4,7 @@ import { Check, Play } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import ProfileDropdown from './ProfileDropdown';
 import TypewriterText from './TypewriterText';
-import './HomePage.css';
+import './Homepage.css';
 
 export default function HomePage() {
   const [isVisible, setIsVisible] = useState(false);

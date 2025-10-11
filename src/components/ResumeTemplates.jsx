@@ -4,7 +4,7 @@ import { createResume } from '../api/resume';
 import { getResumeInfo } from '../api/resumeInfo';
 import { generateDynamicTemplate } from '../utils/templateGenerator';
 import { useNavigate } from 'react-router-dom';
-import './HomePage.css';
+import './Homepage.css';
 
 // Template Processing Optimization - Cache and performance utilities
 class TemplateCache {
@@ -159,7 +159,8 @@ const SmartTemplateCard = React.memo(({
   isProcessing, 
   visibleTemplates, 
   observe, 
-  onTemplateSelect 
+  onTemplateSelect,
+  onViewTemplate
 }) => {
   const cardRef = useRef();
   const [isVisible, setIsVisible] = useState(false);
@@ -188,12 +189,29 @@ const SmartTemplateCard = React.memo(({
       <div className="relative overflow-hidden bg-gradient-to-br from-gray-50 via-indigo-50 to-purple-50 flex-shrink-0">
         <div className="w-full h-80 flex items-center justify-center p-4">
           {isVisible ? (
-            <img 
-              src={template.image} 
-              alt={`${template.name} Template`} 
-              className="w-full h-full object-contain transition-all duration-500 group-hover:scale-110 group-hover:rotate-1"
-              loading="lazy"
-            />
+            <div 
+              className="w-full h-full relative cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewTemplate(template);
+              }}
+              title="Click to view template preview"
+            >
+              <img 
+                src={template.image} 
+                alt={`${template.name} Template`} 
+                className="w-full h-full object-contain transition-all duration-500 group-hover:scale-110 group-hover:rotate-1"
+                loading="lazy"
+              />
+              {/* Overlay to indicate clickability */}
+              <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-all duration-300 rounded-lg flex items-center justify-center opacity-0 hover:opacity-100">
+                <div className="bg-white/90 backdrop-blur-sm rounded-full p-3 shadow-lg">
+                  <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
           ) : (
             <div className="w-full h-full bg-gray-100 animate-pulse rounded-lg flex items-center justify-center">
               <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -213,7 +231,7 @@ const SmartTemplateCard = React.memo(({
         
         {/* Processing Indicator */}
         {!isTemplateReady && (
-          <div className="absolute top-4 left-4">
+          <div className="absolute top-16 left-4">
             <div className="bg-yellow-100 border border-yellow-300 rounded-full px-3 py-1 flex items-center">
               <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-yellow-600 mr-2"></div>
               <span className="text-xs text-yellow-700">Processing...</span>
@@ -221,17 +239,26 @@ const SmartTemplateCard = React.memo(({
           </div>
         )}
         
+        {/* Eye Button - Centered on hover */}
+        <div className="absolute inset-0 flex items-center justify-center z-10 opacity-0 group-hover:opacity-100 transition-all duration-300">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewTemplate(template);
+            }}
+            className="bg-white rounded-full p-3 shadow-md transform transition-transform duration-300 hover:scale-110"
+            title="Preview template"
+          >
+            <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </button>
+        </div>
+        
         {/* Hover Overlay */}
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center"
              style={{ background: 'linear-gradient(135deg, rgba(102,126,234,0.2) 0%, rgba(118,75,162,0.2) 100%)' }}>
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <div className="bg-white rounded-full p-3 shadow-lg">
-              <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -786,6 +813,8 @@ const ResumeTemplates = ({ onTemplateSelect }) => {
   const [resumeInfo, setResumeInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('personalized'); // 'personalized' or 'default'
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Optimization hooks
   const { processedTemplates, isProcessing } = useBackgroundTemplateProcessing(TEMPLATES, resumeInfo);
@@ -803,6 +832,37 @@ const ResumeTemplates = ({ onTemplateSelect }) => {
       }
     };
   }, [resumeInfo]);
+
+  // Handle opening template image modal
+  const handleViewTemplate = (template) => {
+    setSelectedTemplate(template);
+    setIsModalOpen(true);
+  };
+
+  // Handle closing template image modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedTemplate(null);
+  };
+
+  // Handle escape key to close modal
+  useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape' && isModalOpen) {
+        handleCloseModal();
+      }
+    };
+
+    if (isModalOpen) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isModalOpen]);
 
   // Function to process template for default view by removing Handlebars and using fallback content
   const processDefaultTemplate = (templateContent) => {
@@ -1064,6 +1124,7 @@ const ResumeTemplates = ({ onTemplateSelect }) => {
               visibleTemplates={visibleTemplates}
               observe={observe}
               onTemplateSelect={handleUseTemplate}
+              onViewTemplate={handleViewTemplate}
             />
           ))}
         </div>
@@ -1071,6 +1132,31 @@ const ResumeTemplates = ({ onTemplateSelect }) => {
         {/* Enhanced Bottom Section */}
    
       </div>
+
+      {/* Template Image Modal */}
+      {isModalOpen && selectedTemplate && (
+        <div className="fixed inset-0 z-50 bg-black/90 overflow-auto">
+          <div className="relative min-h-full flex items-center justify-center p-4">
+            {/* Close Button */}
+            <button
+              onClick={handleCloseModal}
+              className="fixed top-4 right-4 z-10 p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors duration-200"
+              title="Close preview"
+            >
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Template Image */}
+            <img
+              src={selectedTemplate.image}
+              alt={`${selectedTemplate.name} Template Preview`}
+              className="max-w-full h-auto"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

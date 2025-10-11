@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { login as loginApi } from '../api/auth';
 import { Eye, EyeOff, Mail, Lock, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import './HomePage.css';
+import './Homepage.css';
 
 const Login = () => {
   const [email, setEmail] = useState('');
