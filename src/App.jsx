@@ -5,6 +5,8 @@ import Signup from './components/Signup';
 import ResumeBuilder from './components/ResumeBuilder';
 import ResumeBuilderPage from './components/ResumeBuilderPage';
 import ResumeAnalyzer from './components/ResumeAnalyzer';
+import RolePredictor from './components/RolePredictor';
+import ResumeForm from './components/ResumeForm';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import { ResumeProvider } from './context/ResumeContext';
@@ -20,6 +22,7 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/analyzer" element={<ResumeAnalyzer />} />
+          <Route path="/role-predictor" element={<RolePredictor />} />
           
           {/* Protected routes */}
           <Route 
@@ -43,6 +46,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <ResumeBuilder />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/resume-form" 
+            element={
+              <ProtectedRoute>
+                <ResumeForm />
               </ProtectedRoute>
             } 
           />

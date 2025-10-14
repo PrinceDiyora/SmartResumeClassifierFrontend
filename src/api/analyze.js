@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000/api/analyze';
+const API_URL = 'http://localhost:5000/api/analyze';
 
 // Analyze a resume PDF file
 export async function analyzeResume(resumeFile) {
@@ -19,6 +19,28 @@ export async function analyzeResume(resumeFile) {
     return await response.json();
   } catch (error) {
     console.error('Error analyzing resume:', error);
+    throw error;
+  }
+}
+
+export async function predictRole(resumeFile) {
+  try {
+    const formData = new FormData();
+    formData.append('resumeFile', resumeFile);
+
+    const response = await fetch(`${API_URL}/predict-role`, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to predict role');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error predicting role:', error);
     throw error;
   }
 }

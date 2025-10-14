@@ -121,6 +121,7 @@ body {
 /* Header Styles */
 .main-header {
   background: rgba(255, 255, 255, 0.95);
+  -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   padding: 1rem 0;
   position: sticky;
@@ -718,6 +719,7 @@ body {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 32px;
+  align-items: stretch; /* ensure cards take equal height so links align */
 }
 
 .feature-card {
@@ -729,6 +731,8 @@ body {
   border: 1px solid var(--border-color);
   position: relative;
   overflow: hidden;
+  display: flex;             /* stack content vertically */
+  flex-direction: column;    /* so we can push link to bottom */
 }
 
 .feature-card::before {
@@ -789,6 +793,7 @@ body {
   text-decoration: none;
   font-weight: 600;
   transition: all 0.3s ease;
+  margin-top: auto;          /* push link to bottom of card */
 }
 
 .feature-link:hover {
@@ -949,6 +954,7 @@ body {
   font-size: 14px;
   font-weight: 600;
   margin-bottom: 24px;
+  -webkit-backdrop-filter: blur(5px);
   backdrop-filter: blur(5px);
 }
 

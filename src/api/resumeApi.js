@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/api/analyze';
+const API_URL = 'http://localhost:5000/api/analyze';
 
 // Create axios instance with default config
 const resumeApi = axios.create({

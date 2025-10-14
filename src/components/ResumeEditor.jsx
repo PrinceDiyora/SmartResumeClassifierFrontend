@@ -22,6 +22,7 @@ const ResumeEditor = () => {
   const [compiling, setCompiling] = useState(false);
   const [pdfUrl, setPdfUrl] = useState(null);
   const [error, setError] = useState(null);
+  const [compilationError, setCompilationError] = useState(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [compileFlash, setCompileFlash] = useState(false);
   const [saveTimeout, setSaveTimeout] = useState(null);
@@ -133,6 +134,7 @@ const ResumeEditor = () => {
     try {
       setCompiling(true);
       setError(null);
+      setCompilationError(null);
       
       // save+compile on server (DB update only now)
       const response = await compileAndSave({ id, title, code: latex, token });
@@ -147,7 +149,25 @@ const ResumeEditor = () => {
       setTimeout(() => setCompileFlash(false), 1000);
     } catch (err) {
       console.error('Compilation error:', err);
-      setError('Failed to compile LaTeX. Please check your code for errors.');
+      console.error('Error details:', err.details);
+      
+      if (err.details && err.details.type === 'compilation') {
+        // Show detailed LaTeX compilation error
+        console.log('Setting compilation error:', {
+          message: err.message,
+          stderr: err.details.stderr,
+          stdout: err.details.stdout
+        });
+        setCompilationError({
+          message: err.message,
+          stderr: err.details.stderr,
+          stdout: err.details.stdout
+        });
+      } else {
+        // Show generic error for other types of errors
+        console.log('Setting generic error');
+        setError('Failed to compile LaTeX. Please check your code for errors.');
+      }
     } finally {
       setCompiling(false);
     }
@@ -360,6 +380,58 @@ const ResumeEditor = () => {
             {error && (
               <div className="mb-3 bg-red-50 text-red-700 p-3 rounded-md text-sm">
                 {error}
+              </div>
+            )}
+            
+            {compilationError && (
+              <div className="mb-3 bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <h3 className="text-sm font-medium text-red-800 mb-2">
+                      LaTeX Compilation Error
+                    </h3>
+                    
+                    {compilationError.stderr && (
+                      <div className="mb-3">
+                        <h4 className="text-xs font-semibold text-red-700 mb-1">Error Details:</h4>
+                        <pre className="text-xs bg-red-100 p-2 rounded border overflow-x-auto max-h-40 text-red-700 whitespace-pre-wrap font-mono">
+                          {compilationError.stderr}
+                        </pre>
+                      </div>
+                    )}
+                    
+                    {compilationError.stdout && (
+                      <div className="mb-3">
+                        <h4 className="text-xs font-semibold text-red-700 mb-1">Additional Output:</h4>
+                        <pre className="text-xs bg-red-100 p-2 rounded border overflow-x-auto max-h-32 text-red-700 whitespace-pre-wrap font-mono">
+                          {compilationError.stdout}
+                        </pre>
+                      </div>
+                    )}
+                    
+                    <div className="mt-3 text-xs text-red-600">
+                      <p><strong>Common fixes:</strong></p>
+                      <ul className="list-disc list-inside space-y-1 mt-1">
+                        <li>Check for unclosed braces: { }</li>
+                        <li>Ensure all \begin commands have matching \end commands</li>
+                        <li>Remove extra backslashes (\\) at line endings</li>
+                        <li>Check for special characters that need escaping</li>
+                      </ul>
+                    </div>
+                    
+                    <button
+                      onClick={() => setCompilationError(null)}
+                      className="mt-3 text-xs text-red-600 hover:text-red-800 underline"
+                    >
+                      Dismiss Error
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
             <div className="h-[calc(100%-2.5rem)] rounded-lg overflow-hidden border border-gray-200 shadow-sm">

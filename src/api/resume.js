@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000/api/resumes';
+const API_URL = 'http://localhost:5000/api/resumes';
 
 // Get all resumes for the authenticated user
 export async function getUserResumes(token) {
