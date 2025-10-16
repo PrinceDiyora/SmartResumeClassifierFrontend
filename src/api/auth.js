@@ -17,3 +17,21 @@ export async function signup({ email, password, confirmpassword }) {
   });
   return response.json();
 } 
+
+export async function requestPasswordReset(email) {
+  const response = await fetch(`${API_URL}/request-reset`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  });
+  return response.json();
+}
+
+export async function resetPasswordWithOtp({ email, otp, newPassword }) {
+  const response = await fetch(`${API_URL}/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, otp, newPassword })
+  });
+  return response.json();
+}
