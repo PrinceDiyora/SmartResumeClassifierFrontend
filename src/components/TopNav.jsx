@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
-import './HomePage.css';
+import './Homepage.css';
 import ProfileDropdown from './ProfileDropdown';
 import { useAuth } from '../context/AuthContext';
 
