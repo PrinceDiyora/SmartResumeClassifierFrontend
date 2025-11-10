@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 const API_URL = 'http://localhost:5000/api/analyze';
 
 // Analyze a resume PDF file
@@ -5,21 +7,15 @@ export async function analyzeResume(resumeFile) {
   try {
     const formData = new FormData();
     formData.append('resumeFile', resumeFile);
-    
-    const response = await fetch(`${API_URL}/ats-score`, {
-      method: 'POST',
-      body: formData
+
+    const response = await axios.post(`${API_URL}/ats-score`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
     });
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to analyze resume');
-    }
-    
-    return await response.json();
+
+    return response.data;
   } catch (error) {
     console.error('Error analyzing resume:', error);
-    throw error;
+    throw error.response?.data?.error || error.message || 'Failed to analyze resume';
   }
 }
 
@@ -28,20 +24,14 @@ export async function predictRole(resumeFile) {
     const formData = new FormData();
     formData.append('resumeFile', resumeFile);
 
-    const response = await fetch(`${API_URL}/predict-role`, {
-      method: 'POST',
-      body: formData
+    const response = await axios.post(`${API_URL}/predict-role`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Failed to predict role');
-    }
-
-    return await response.json();
+    return response.data;
   } catch (error) {
     console.error('Error predicting role:', error);
-    throw error;
+    throw error.response?.data?.error || error.message || 'Failed to predict role';
   }
 }
 
@@ -73,6 +63,6 @@ export async function fixResumeIssues(resumeFile, analysisResult) {
     return improved;
   } catch (error) {
     console.error('Error fixing resume issues:', error);
-    throw error;
+    throw error.response?.data?.error || error.message || 'Failed to fix resume issues';
   }
 }

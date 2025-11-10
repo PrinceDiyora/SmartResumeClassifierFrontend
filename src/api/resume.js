@@ -1,23 +1,18 @@
+import axios from 'axios';
+
 const API_URL = 'http://localhost:5000/api/resumes';
 
 // Get all resumes for the authenticated user
 export async function getUserResumes(token) {
   try {
-    const response = await fetch(API_URL, {
-      method: 'GET',
+    const response = await axios.get(API_URL, {
       headers: { 
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       }
     });
     
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('API Error:', response.status, errorData);
-      return [];
-    }
-    
-    const data = await response.json();
+    const data = response.data;
     
     // Ensure we always return an array
     if (Array.isArray(data)) {
@@ -36,64 +31,53 @@ export async function getUserResumes(token) {
 
 // Get a specific resume by ID
 export async function getResumeById(id, token) {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: 'GET',
+  const response = await axios.get(`${API_URL}/${id}`, {
     headers: { 
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     }
   });
-  return response.json();
+  return response.data;
 }
 
 // Create a new resume
 export async function createResume(resumeData, token) {
   try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
+    const response = await axios.post(API_URL, resumeData, {
       headers: { 
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(resumeData)
+      }
     });
     
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      console.error('Create Resume API Error:', response.status, errorData);
-      throw new Error(`Failed to create resume: ${response.status}`);
-    }
-    
-    const data = await response.json();
+    const data = response.data;
     console.log('Create resume response:', data);
     return data;
   } catch (error) {
     console.error('Error creating resume:', error);
-    throw error;
+    const msg = error.response?.data?.error || error.message || 'Failed to create resume';
+    throw new Error(msg);
   }
 }
 
 // Update an existing resume
 export async function updateResume(id, resumeData, token) {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: 'PUT',
-    headers: { 
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify(resumeData)
-  });
-  return response.json();
-}
-
-// Delete a resume
-export async function deleteResume(id, token) {
-  const response = await fetch(`${API_URL}/${id}`, {
-    method: 'DELETE',
+  const response = await axios.put(`${API_URL}/${id}`, resumeData, {
     headers: { 
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     }
   });
-  return response.json();
+  return response.data;
+}
+
+// Delete a resume
+export async function deleteResume(id, token) {
+  const response = await axios.delete(`${API_URL}/${id}`, {
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  return response.data;
 }
