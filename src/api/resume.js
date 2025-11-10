@@ -1,11 +1,10 @@
 import axios from 'axios';
-
-const API_URL = 'http://localhost:5000/api/resumes';
+const API = import.meta.env.VITE_API_URL;
 
 // Get all resumes for the authenticated user
 export async function getUserResumes(token) {
   try {
-    const response = await axios.get(API_URL, {
+    const response = await axios.get(`${API}/api/resumes`, {
       headers: { 
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
@@ -31,7 +30,7 @@ export async function getUserResumes(token) {
 
 // Get a specific resume by ID
 export async function getResumeById(id, token) {
-  const response = await axios.get(`${API_URL}/${id}`, {
+  const response = await axios.get(`${API}/api/resumes/${id}`, {
     headers: { 
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
@@ -43,7 +42,7 @@ export async function getResumeById(id, token) {
 // Create a new resume
 export async function createResume(resumeData, token) {
   try {
-    const response = await axios.post(API_URL, resumeData, {
+    const response = await axios.post(`${API}/api/resumes`, resumeData, {
       headers: { 
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
@@ -62,7 +61,7 @@ export async function createResume(resumeData, token) {
 
 // Update an existing resume
 export async function updateResume(id, resumeData, token) {
-  const response = await axios.put(`${API_URL}/${id}`, resumeData, {
+  const response = await axios.put(`${API}/api/resumes/${id}`, resumeData, {
     headers: { 
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
@@ -73,7 +72,7 @@ export async function updateResume(id, resumeData, token) {
 
 // Delete a resume
 export async function deleteResume(id, token) {
-  const response = await axios.delete(`${API_URL}/${id}`, {
+  const response = await axios.delete(`${API}/api/resumes/${id}`, {
     headers: { 
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`

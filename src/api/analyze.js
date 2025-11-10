@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_URL = 'http://localhost:5000/api/analyze';
+const API = import.meta.env.VITE_API_URL;
 
 // Analyze a resume PDF file
 export async function analyzeResume(resumeFile) {
@@ -8,7 +7,7 @@ export async function analyzeResume(resumeFile) {
     const formData = new FormData();
     formData.append('resumeFile', resumeFile);
 
-    const response = await axios.post(`${API_URL}/ats-score`, formData, {
+    const response = await axios.post(`${API}/api/analyze/ats-score`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
 
@@ -24,7 +23,7 @@ export async function predictRole(resumeFile) {
     const formData = new FormData();
     formData.append('resumeFile', resumeFile);
 
-    const response = await axios.post(`${API_URL}/predict-role`, formData, {
+    const response = await axios.post(`${API}/api/analyze/predict-role`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
 

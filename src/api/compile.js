@@ -1,4 +1,5 @@
 import axios from 'axios';
+const API = import.meta.env.VITE_API_URL;
 
 // export async function compileLatex(latex) {
 //   const response = await axios.post(
@@ -12,7 +13,7 @@ import axios from 'axios';
 export async function compileAndSave({ id, title, code, token }) {
   try {
     const response = await axios.post(
-      'http://localhost:5000/api/compile/save',
+      `${API}/api/compile/save`,
       { id, title, code },
       {
         responseType: 'blob',

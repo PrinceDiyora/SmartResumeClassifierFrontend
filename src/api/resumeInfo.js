@@ -1,10 +1,9 @@
 import axios from 'axios';
-
-const API_URL = 'http://localhost:5000/api/resumeInfo';
+const API = import.meta.env.VITE_API_URL;
 
 export async function saveResumeInfo(resumeData, token) {
   try {
-    const response = await axios.post(API_URL, resumeData, {
+    const response = await axios.post(`${API}/api/resumeInfo`, resumeData, {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
@@ -21,7 +20,7 @@ export async function saveResumeInfo(resumeData, token) {
 
 export async function getResumeInfo(token) {
   try {
-    const response = await axios.get(API_URL, {
+    const response = await axios.get(`${API}/api/resumeInfo`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
