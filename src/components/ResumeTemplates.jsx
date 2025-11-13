@@ -866,77 +866,87 @@ const ResumeTemplates = ({ onTemplateSelect }) => {
 
   // Function to process template for default view by removing Handlebars and using fallback content
   const processDefaultTemplate = (templateContent) => {
-    let processedContent = templateContent;
-    
-    // Replace basic placeholders with default values
-    processedContent = processedContent
-      .replace(/\{\{name\}\}/g, 'John Doe')
-      .replace(/\{\{email\}\}/g, 'john.doe@email.com')
-      .replace(/\{\{phone\}\}/g, '+1 (555) 123-4567')
-      .replace(/\{\{uppercase name\}\}/g, 'JOHN DOE')
-      .replace(/\{\{linkedin\}\}/g, 'linkedin.com/in/johndoe')
-      .replace(/\{\{github\}\}/g, 'github.com/johndoe')
-      .replace(/\{\{website\}\}/g, 'johndoe.com')
-      .replace(/\{\{jobRole\}\}/g, 'Software Developer');
-    
-    // Handle conditional sections with {{else}} blocks - keep only the else content
-    const conditionalSections = [
-      { pattern: /\{\{#if\s+educations\}\}[\s\S]*?\{\{\/each\}\}[\s\S]*?\{\{else\}\}([\s\S]*?)\{\{\/if\}\}/g },
-      { pattern: /\{\{#if\s+experiences\}\}[\s\S]*?\{\{\/each\}\}[\s\S]*?\{\{else\}\}([\s\S]*?)\{\{\/if\}\}/g },
-      { pattern: /\{\{#if\s+skills\}\}[\s\S]*?\{\{else\}\}([\s\S]*?)\{\{\/if\}\}/g },
-      { pattern: /\{\{#if\s+languages\}\}[\s\S]*?\{\{else\}\}([\s\S]*?)\{\{\/if\}\}/g },
-    ];
-    
-    conditionalSections.forEach(({ pattern }) => {
-      processedContent = processedContent.replace(pattern, '$1');
-    });
-    
-    // Handle conditional sections without {{else}} blocks - remove them entirely
-    const conditionalWithoutElse = [
-      /\{\{#if\s+summary\}\}[\s\S]*?\{\{\/if\}\}/g,
-      /\{\{#if\s+projects\}\}[\s\S]*?\{\{\/if\}\}/g,
-      /\{\{#if\s+linkedin\}\}[\s\S]*?\{\{\/if\}\}/g,
-      /\{\{#if\s+github\}\}[\s\S]*?\{\{\/if\}\}/g,
-      /\{\{#if\s+website\}\}[\s\S]*?\{\{\/if\}\}/g,
-    ];
-    
-    conditionalWithoutElse.forEach(pattern => {
-      processedContent = processedContent.replace(pattern, '');
-    });
-    
-    // Remove any remaining handlebars syntax
-    processedContent = processedContent.replace(/\{\{[^}]*\}\}/g, '');
-    
-    // Fix LaTeX syntax issues
-    // Remove empty lines that might cause "There's no line here to end" errors
-    processedContent = processedContent.replace(/\\\\\s*$/gm, ''); // Remove trailing \\
-    processedContent = processedContent.replace(/\\\\\s*\n\s*\\\\/g, '\\\\'); // Remove double \\
-    
-    // Ensure proper spacing around sections
-    processedContent = processedContent.replace(/\\section\*/g, '\n\\section*');
-    processedContent = processedContent.replace(/\\subsection\*/g, '\n\\subsection*');
-    
-    // Clean up multiple consecutive newlines
-    processedContent = processedContent.replace(/\n\s*\n\s*\n/g, '\n\n');
-    
-    // Remove leading/trailing whitespace from lines
-    processedContent = processedContent
-      .split('\n')
-      .map(line => line.trim())
-      .filter(line => line !== '') // Remove completely empty lines
-      .join('\n');
-    
-    // Add proper spacing between sections
-    processedContent = processedContent.replace(/\n(\\section)/g, '\n\n$1');
-    processedContent = processedContent.replace(/\n(\\subsection)/g, '\n\n$1');
-    
-    // Ensure document ends properly
-    if (!processedContent.trim().endsWith('\\end{document}')) {
-      processedContent = processedContent.trim() + '\n\n\\end{document}';
-    }
-    
-    return processedContent;
+  let output = templateContent;
+
+
+  const defaults = {
+    name: 'John Doe',
+    email: 'john.doe@email.com',
+    phone: '+1 (555) 123-4567',
+    linkedin: 'linkedin.com/in/johndoe',
+    github: 'github.com/johndoe',
+    website: 'johndoe.com',
+    jobRole: 'Software Developer',
+    summary: 'Passionate developer with strong problem-solving skills.'
   };
+
+  Object.entries(defaults).forEach(([key, val]) => {
+    output = output.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), val);
+  });
+
+  output = output.replace(/\{\{uppercase name\}\}/g, 'JOHN DOE');
+
+  // If...else blocks → retain else only
+  output = output.replace(
+    /\{\{#if[\s\S]*?\}\}[\s\S]*?\{\{else\}\}([\s\S]*?)\{\{\/if\}\}/g,
+    '$1'
+  );
+
+  // Remove if blocks without else
+  output = output.replace(
+    /\{\{#if[\s\S]*?\}\}([\s\S]*?)\{\{\/if\}\}/g,
+    ''
+  );
+
+  // Remove each blocks
+  output = output.replace(
+    /\{\{#each[\s\S]*?\}\}([\s\S]*?)\{\{\/each\}\}/g,
+    ''
+  );
+
+  // Leftover handlebars
+  output = output.replace(/\{\{[^}]+\}\}/g, '');
+
+  // If...else blocks → keep else content
+  output = output.replace(
+    /#if\s+[^\n]+([\s\S]*?)#else([\s\S]*?)\/if/g,
+    '$2'
+  );
+
+  // Remove if blocks without else
+  output = output.replace(
+    /#if\s+[^\n]+([\s\S]*?)\/if/g,
+    ''
+  );
+
+  // Remove each loops (always fallback)
+  output = output.replace(
+    /#each\s+[^\n]+([\s\S]*?)\/each/g,
+    ''
+  );
+
+  output = output
+    .replace(/\\\\\s*$/gm, '') 
+    .replace(/\\\\\s*\n\s*\\\\/g, '\\\\')
+    .replace(/\n\s*\n\s*\n/g, '\n\n')
+    .split('\n')
+    .map(x => x.trim())
+    .filter(x => x !== '')
+    .join('\n');
+
+  output = output
+    .replace(/\n(\\section)/g, '\n\n$1')
+    .replace(/\n(\\subsection)/g, '\n\n$1');
+
+  if (!output.trim().endsWith('\\end{document}')) {
+    output += '\n\n\\end{document}';
+  }
+
+  return output;
+};
+
+
+
 
   // Fetch user's resume info on component mount
   useEffect(() => {
